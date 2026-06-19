@@ -1,7 +1,7 @@
 /**
  * @name DiscordAITranslator
  * @author ROOT94
- * @version v0.0.2
+ * @version 0.3.26
  * @description 基于 BetterDiscord Translator 二次开发的 Discord AI 翻译插件
  * @source https://github.com/able-root/DiscordAITranslator
  */
@@ -10,12 +10,23 @@ module.exports = (_ => {
 	const changeLog = {
 		
 	};
+
+	// Version source: the BetterDiscord metadata header `@version`.
+	// Rule: SemVer only: MAJOR.MINOR.PATCH, for example `0.0.18`.
+	// Do not add a leading `v` here; BetterDiscord may render its own UI prefix.
+	// Keep the value as a string, never parse it as a decimal number.
+	const normalizeSemverVersion = version => {
+		const raw = String(version == null ? "" : version).trim();
+		const withoutPrefix = raw.replace(/^(?:v\s*)+/i, "");
+		const match = withoutPrefix.match(/^(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?$/);
+		return match ? `${match[1]}.${match[2]}.${match[3]}` : withoutPrefix;
+	};
 	
 	return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
 		constructor (meta) {for (let key in meta) this[key] = meta[key];}
 		getName () {return this.name;}
 		getAuthor () {return this.author;}
-		getVersion () {return this.version;}
+		getVersion () {return normalizeSemverVersion(this.version);}
 		getDescription () {return `The Library Plugin needed for ${this.name} is missing. Open the Plugin Settings to download it. \n\n${this.description}`;}
 		
 		downloadLibrary () {
@@ -56,7 +67,7 @@ module.exports = (_ => {
 		}
 	} : (([Plugin, BDFDB]) => {
 		var _this;
-		const translationProtectionSignatureVersion = "2026-06-12-auto-protect-v1";
+		const translationProtectionSignatureVersion = "2026-06-16-auto-protect-v11";
 		
 		const translateIconGeneral = `<svg name="Translate" width="24" height="24" viewBox="0 0 24 24"><mask/><path fill="currentColor" mask="url(#translateIconMask)" d="m 9.6568988,1.9999999 c -1.141416,0 -0.951614,1.2688185 -0.951614,1.2688185 v 0.6505173 h -5.392479 c 0,0 -1.2688185,-0.1898024 -1.2688185,0.9516139 0,1.1414159 1.2688185,0.9516139 1.2688185,0.9516139 H 12.426863 C 12.695162,7.2780713 11.349082,9.1398691 9.7646988,10.765256 8.6555628,9.6878231 7.4332858,8.3134878 6.8664892,7.065981 6.6161862,6.515072 5.9881318,6.6956414 5.7283935,6.9736693 5.1836529,7.5567679 5.5785907,8.592173 6.0833902,9.3409331 c 0.246901,0.366224 1.3724726,1.5182279 2.4570966,2.5995909 -1.6322361,1.477469 -3.154699,2.550028 -3.154699,2.550028 0,0 -1.0769951,0.696378 -0.322161,1.552568 0.7548319,0.856187 1.5810669,-0.125147 1.5810669,-0.125147 0,0 1.5136611,-1.082765 3.2203701,-2.6696 0.5195872,0.508635 0.8970952,0.874172 0.8970952,0.874172 0,0 0.82821,0.985394 1.582925,0.09231 0.754714,-0.893081 -0.354377,-1.545753 -0.354377,-1.545753 0.0097,0.03486 -0.34186,-0.224086 -0.864878,-0.666625 1.804964,-1.884163 3.470802,-4.1622897 3.47686,-6.1799145 h 1.398302 c 0,0 1.268819,0.2176541 1.268819,-0.9516139 0,-1.1692683 -1.268819,-0.9516139 -1.268819,-0.9516139 H 10.608512 V 3.2688184 c 0,0 0.189804,-1.2688185 -0.9516132,-1.2688185 z M 15.056812,10.104826 10.536646,22 h 2.379035 l 0.964624,-2.537637 h 4.732049 L 19.576978,22 h 2.379035 L 17.435847,10.104826 Z m 1.189517,3.130537 1.643021,4.323772 h -3.286042 z"/><extra/></svg>`;
 		const translateIconMask = `<mask id="translateIconMask" fill="black"><path fill="white" d="M 0 0 H 24 V 24 H 0 Z"/><path fill="black" d="M24 12 H 12 V 24 H 24 Z"/></mask>`;
@@ -172,25 +183,15 @@ module.exports = (_ => {
 							]
 						}),
 						detectedLanguage && BDFDB.ReactUtils.createElement("div", {
-							className: "translator-settings-meta",
-							children: `${_this.getCustomText("language_detector_detected")}: ${_this.getLanguageDisplayName(detectedLanguage)} (${detectedLanguage.id})`
-						}),
-						detectedLanguage && BDFDB.ReactUtils.createElement("div", {
-							className: "translator-settings-inline-actions",
-							style: {justifyContent: "flex-start", marginTop: "10px"},
+							className: "translator-detector-result-row",
 							children: [
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Button, {
-									size: BDFDB.LibraryComponents.Button.Sizes.SMALL,
-									onClick: _ => this.applyDetectedLanguage(messageTypes.RECEIVED, languageTypes.INPUT),
-									children: _this.getCustomText("language_detector_apply_received")
+								BDFDB.ReactUtils.createElement("div", {
+									className: "translator-detector-result-text",
+									children: `${_this.getCustomText("language_detector_detected")}: ${_this.getLanguageDisplayName(detectedLanguage)} (${detectedLanguage.id})`
 								}),
 								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Button, {
 									size: BDFDB.LibraryComponents.Button.Sizes.SMALL,
-									onClick: _ => this.applyDetectedLanguage(messageTypes.SENT, languageTypes.INPUT),
-									children: _this.getCustomText("language_detector_apply_sent")
-								}),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Button, {
-									size: BDFDB.LibraryComponents.Button.Sizes.SMALL,
+									className: "translator-detector-apply-button",
 									onClick: _ => this.applyDetectedLanguage(messageTypes.SENT, languageTypes.OUTPUT),
 									children: _this.getCustomText("language_detector_apply_sent_output")
 								})
@@ -209,17 +210,175 @@ module.exports = (_ => {
 					tag: BDFDB.LibraryComponents.FormTitle.Tags.H5,
 					value: _this.settings.general[key]
 				}));
-				const channelTranslationToggle = BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsItem, {
-					type: "Switch",
-					className: "translator-settings-switch-row",
-					label: _this.getChannelTranslationToggleLabel(),
-					tag: BDFDB.LibraryComponents.FormTitle.Tags.H5,
-					value: _this.isTranslationEnabled(this.props.channelId),
-					onChange: value => {
-						_this.toggleTranslation(this.props.channelId);
-						BDFDB.ReactUtils.forceUpdate(this);
+				const quickText = (zh, en, ru = null) => _this.isChineseUiLanguage() ? zh : _this.isRussianUiLanguage() ? (ru || en) : en;
+				const saveQuickFilterSetting = (key, value) => {
+					if (!_this.settings.filters) _this.settings.filters = {};
+					_this.settings.filters[key] = value;
+					BDFDB.DataUtils.save(value, _this, "filters", key);
+					_this.SettingsUpdated = true;
+				};
+				const blurQuickFocus = () => {
+					try {
+						_this._suppressQuickLimitFocusUntil = Date.now() + 450;
+						const activeElement = typeof document != "undefined" && document.activeElement;
+						if (activeElement && typeof activeElement.blur == "function") activeElement.blur();
 					}
+					catch (err) {}
+				};
+				const refreshQuickLoadedTranslation = (batched = true) => {
+					blurQuickFocus();
+					_this.resetAutoTranslationTracking(this.props.channelId);
+					_this.clearAutoTranslationQueue(this.props.channelId);
+					if (_this.getReceivedAutoTranslateScope() == "loaded_messages" && _this.isReceivedAutoTranslationEnabled(this.props.channelId)) {
+						_this.updateLoadedAutoTranslationStatus({active: true, collecting: true, done: false, channelId: this.props.channelId, batch: (loadedAutoTranslationBatchNumbers[this.props.channelId] || 0) + 1, total: 0, processed: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""});
+					}
+					// One scan render is allowed to collect the current loaded snapshot. After that,
+					// historical translations are deferred and flushed once per batch.
+					_this.scheduleTranslationRerender({batched, allowWhileSettings: true});
+					setTimeout(_ => _this.processAutoTranslationQueue(), 250);
+					BDFDB.ReactUtils.forceUpdate(this);
+				};
+				const createQuickSegment = (options, value, onChange, className = "") => BDFDB.ReactUtils.createElement("div", {
+					className: BDFDB.DOMUtils.formatClassName("translator-quick-segment", className),
+					children: options.map(option => BDFDB.ReactUtils.createElement("button", {
+						type: "button",
+						className: BDFDB.DOMUtils.formatClassName("translator-quick-segment-button", option.value == value && "translator-quick-segment-button-active"),
+						onMouseDown: blurQuickFocus,
+						onClick: _ => {
+							blurQuickFocus();
+							onChange(option.value);
+						},
+						children: option.label
+					}))
 				});
+				const isLoadedQuickScope = _this.getReceivedAutoTranslateScope() == "loaded_messages";
+				const applyQuickLoadedLimit = value => {
+					const nextValue = _this.normalizeLoadedAutoTranslateLimit(value);
+					saveQuickFilterSetting("receivedAutoTranslateLoadedLimit", String(nextValue));
+					refreshQuickLoadedTranslation(true);
+				};
+				const quickAutoTranslateControls = BDFDB.ReactUtils.createElement("div", {
+					className: "translator-popout-auto-panel",
+					children: [
+						BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsItem, {
+							type: "Switch",
+							className: "translator-settings-switch-row translator-quick-channel-toggle",
+							label: _this.getChannelTranslationToggleLabel(),
+							tag: BDFDB.LibraryComponents.FormTitle.Tags.H5,
+							value: _this.isReceivedAutoTranslationEnabled(this.props.channelId),
+							onMouseDown: blurQuickFocus,
+							onChange: value => {
+								blurQuickFocus();
+								_this.toggleReceivedAutoTranslation(this.props.channelId);
+								refreshQuickLoadedTranslation(_this.getReceivedAutoTranslateScope() == "loaded_messages");
+							}
+						}),
+						BDFDB.ReactUtils.createElement("div", {
+							className: "translator-quick-strategy-panel",
+							children: [
+								BDFDB.ReactUtils.createElement("div", {
+									className: "translator-quick-strategy-title",
+									children: quickText("自动翻译策略", "Auto-translate strategy", "Стратегия автоперевода")
+								}),
+								BDFDB.ReactUtils.createElement("div", {
+									className: "translator-quick-control-row",
+									children: [
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-quick-control-label",
+											children: quickText("自动翻译范围", "Auto-translate range", "Диапазон автоперевода")
+										}),
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-quick-control-component-wrapper",
+											children: createQuickSegment([
+												{value: "new_only", label: quickText("只翻译新消息", "New only", "Только новые")},
+												{value: "loaded_messages", label: quickText("已加载消息", "Loaded messages", "Загруженные")}
+											], _this.getReceivedAutoTranslateScope(), value => {
+												saveQuickFilterSetting("receivedAutoTranslateScope", value == "loaded_messages" ? "loaded_messages" : "new_only");
+												saveQuickFilterSetting("receivedAutoTranslateLoadedRangeMode", LOADED_AUTO_TRANSLATE_RANGE_MODES.COUNT);
+												refreshQuickLoadedTranslation(value == "loaded_messages");
+											})
+										})
+									]
+								}),
+								BDFDB.ReactUtils.createElement("div", {
+									className: BDFDB.DOMUtils.formatClassName("translator-quick-control-row", !isLoadedQuickScope && "translator-quick-control-row-muted"),
+									children: [
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-quick-control-label",
+											children: quickText("历史处理", "History handling", "История")
+										}),
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-quick-control-component-wrapper",
+											children: createQuickSegment([
+												{value: "current", label: quickText("仅当前已加载", "Current batch", "Текущая пачка")},
+												{value: "scroll", label: quickText("向上滚动继续", "Continue on scroll", "Продолжать")}
+											], _this.shouldContinueLoadedAutoTranslateOnScroll() ? "scroll" : "current", value => {
+												saveQuickFilterSetting("continueLoadedAutoTranslateOnScroll", value == "scroll");
+												refreshQuickLoadedTranslation(true);
+											}, "translator-quick-history-segment")
+										})
+									]
+								}),
+								BDFDB.ReactUtils.createElement("div", {
+									className: BDFDB.DOMUtils.formatClassName("translator-quick-control-row", "translator-quick-limit-row", !isLoadedQuickScope && "translator-quick-control-row-muted"),
+									children: [
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-quick-control-label",
+											children: quickText("每批最多处理", "Per-batch limit", "Лимит пачки")
+										}),
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-quick-control-component-wrapper",
+											children: BDFDB.ReactUtils.createElement("div", {
+												className: "translator-quick-limit-stepper",
+												children: [
+													BDFDB.ReactUtils.createElement("input", {
+														type: "text",
+														inputMode: "numeric",
+														pattern: "[0-9]*",
+														className: "translator-quick-limit-stepper-input",
+														placeholder: "50",
+														value: String(_this.getReceivedAutoTranslateLoadedLimit()),
+														autoFocus: false,
+														tabIndex: -1,
+														onFocus: event => {
+															if (_this._suppressQuickLimitFocusUntil && Date.now() < _this._suppressQuickLimitFocusUntil && event && event.target && typeof event.target.blur == "function") event.target.blur();
+														},
+														onChange: event => {
+															const rawValue = event && event.target ? event.target.value : event;
+															applyQuickLoadedLimit(rawValue);
+														}
+													}),
+													BDFDB.ReactUtils.createElement("div", {
+														className: "translator-quick-limit-stepper-buttons",
+														children: [
+															BDFDB.ReactUtils.createElement("button", {
+																type: "button",
+																className: "translator-quick-limit-stepper-button",
+																onClick: _ => applyQuickLoadedLimit(_this.getReceivedAutoTranslateLoadedLimit() + 1),
+																children: "▲"
+															}),
+															BDFDB.ReactUtils.createElement("button", {
+																type: "button",
+																className: "translator-quick-limit-stepper-button",
+																onClick: _ => applyQuickLoadedLimit(_this.getReceivedAutoTranslateLoadedLimit() - 1),
+																children: "▼"
+															})
+														]
+													})
+												]
+											})
+										})
+									]
+								}),
+								BDFDB.ReactUtils.createElement("div", {
+									className: "translator-quick-hint",
+									children: quickText("每批最多处理上方数量，最大 100；AI 会优先按这个数量整批请求，失败时自动拆包补翻。继续向上滚动时，会对新加载的历史消息再处理一批。", "The number is a per-batch cap, max 100. AI providers try this size first, then split/fallback on failure. When you scroll up, newly loaded history can be processed as a new batch.", "Лимит на пачку, максимум 100; AI сначала пробует этот размер, затем делит при ошибке. При прокрутке вверх новая история обрабатывается новой пачкой.")
+								})
+							]
+						})
+					].filter(Boolean)
+				});
+				// Keep the floating loaded-history status capsule mounted outside this settings surface.
 				return [
 					BDFDB.ArrayUtils.is(_this.settings.exceptions.wordStart) && _this.settings.exceptions.wordStart.length && [
 						BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex, {
@@ -299,6 +458,13 @@ module.exports = (_ => {
 								}),
 								className: BDFDB.disCN.marginbottom8,
 								children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Select, {
+									menuShouldScrollIntoView: false,
+									menuShouldBlockScroll: false,
+									captureMenuScroll: false,
+									menuPosition: "fixed",
+									menuPlacement: "auto",
+									menuPortalTarget: typeof document != "undefined" ? document.body : undefined,
+									maxMenuHeight: typeof window != "undefined" ? Math.max(150, Math.min(240, Math.floor(window.innerHeight * 0.36))) : 220,
 									value: _this.getLanguageChoice(direction, place, this.props.channelId),
 									options: this.filterLanguages(direction, place),
 									optionRenderer: lang => languages[lang.value] ? BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex, {
@@ -347,6 +513,13 @@ module.exports = (_ => {
 						title: _this.labels[`${key}_engine`],
 						className: BDFDB.disCN.marginbottom8,
 						children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Select, {
+							menuShouldScrollIntoView: false,
+							menuShouldBlockScroll: false,
+							captureMenuScroll: false,
+							menuPosition: "fixed",
+							menuPlacement: "auto",
+							menuPortalTarget: typeof document != "undefined" ? document.body : undefined,
+							maxMenuHeight: typeof window != "undefined" ? Math.max(150, Math.min(240, Math.floor(window.innerHeight * 0.36))) : 220,
 							value: _this.settings.engines[key],
 							options: (key == "backup" ? ["----"] : []).concat(Object.keys(translationEngines)).filter(key == "backup" ? (n => n != _this.settings.engines.translator) : (n => n)).map(engineKey => ({value: engineKey, label: translationEngines[engineKey] ? translationEngines[engineKey].name : "----"})),
 							maxVisibleItems: 3,
@@ -360,7 +533,7 @@ module.exports = (_ => {
 					})),
 					BDFDB.ReactUtils.createElement("div", {
 						className: "translator-popout-toggle-group translator-settings-switch-group",
-						children: [...popoutGeneralSettings, channelTranslationToggle]
+						children: [...popoutGeneralSettings, quickAutoTranslateControls]
 					})
 				].flat(10).filter(n => n);
 			}
@@ -553,7 +726,7 @@ module.exports = (_ => {
 		var favorites = [];
 		var authKeys = {};
 		var channelLanguages = {}, guildLanguages = {};
-		var translationEnabledStates = [], isTranslating;
+		var translationEnabledStates = [], receivedAutoTranslationEnabledStates = [], isTranslating;
 		var translatedMessages = {}, oldMessages = {};
 		var translationCache = {};
 		var autoTranslationQueue = [];
@@ -562,16 +735,56 @@ module.exports = (_ => {
 		var isBackgroundTranslating = false;
 		var translationCacheSaveTimer = null;
 		var translationRerenderTimer = null;
+		var deferredTextAreaRerenderTimer = null;
 		var autoTranslationQueueRetryTimer = null;
+		var historicalAutoTranslationStartTimer = null;
+		var historicalAutoTranslationScrollScanTimer = null;
+		var historicalAutoTranslationPostBatchScanTimer = null;
 		var autoTranslationChannelStates = {};
 		var replyPreviewTranslations = {};
 		var queuedReplyPreviewTranslations = {};
+		var autoTranslationEligibleReplyPreviewMessages = {};
+		var replyPreviewRenderMessageIds = {};
 		var lastAutoTranslationChannelId = null;
+		var lastAutoTranslationUserScrollTime = 0;
+		var historicalAutoTranslationPausedUntil = 0;
+		var autoTranslationScrollWatcherAttached = false;
+		var historicalAutoTranslationRerenderPending = false;
+		var historicalAutoTranslationPendingCount = 0;
+		var historicalAutoTranslationLastFlushTime = 0;
+		var historicalAutoTranslationBatchActive = false;
+		var historicalAutoTranslationBatchProcessedCount = 0;
+		var historicalAutoTranslationBatchMessageIds = {};
+		var historicalAutoTranslationBatchChannelId = null;
+		var historicalAutoTranslationBatchTotal = 0;
+		var historicalAutoTranslationStaging = {};
+		var loadedAutoTranslationPassCounts = {};
+		var loadedAutoTranslationPassRequestCounts = {};
+		var loadedAutoTranslationPassScrollStamps = {};
+		var loadedAutoTranslationAttemptedMessages = {};
+		var loadedAutoTranslationStatus = {active: false, collecting: false, channelId: null, total: 0, processed: 0, batch: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""};
+		var loadedAutoTranslationBatchNumbers = {};
+		var loadedAutoTranslationStatusHideTimer = null;
+		var deferredSettingsRerenderTimer = null;
+		var manualTranslationScrollAnchor = null;
+		var manualTranslationScrollLockTimer = null;
 		const MAX_TRANSLATION_CACHE_ENTRIES = 500;
 		const AUTO_TRANSLATION_RERENDER_DELAY = 650;
-		const AUTO_TRANSLATION_HISTORY_RERENDER_DELAY = 1000;
+		const AUTO_TRANSLATION_HISTORY_RERENDER_DELAY = 1500;
 		const AUTO_TRANSLATION_QUEUE_RETRY_DELAY = 900;
+		const AUTO_TRANSLATION_SCROLL_IDLE_DELAY = 900;
+		const HISTORICAL_AUTO_TRANSLATION_FLUSH_DELAY = 1800;
+		const HISTORICAL_AUTO_TRANSLATION_COLLECT_DELAY = 450;
+		const MAX_LOADED_AUTO_TRANSLATE_QUEUE = 1000;
+		const HISTORICAL_AI_BATCH_ITEM_LIMIT_MAX = 100;
+		const HISTORICAL_AI_BATCH_CHAR_LIMIT = 24000;
+		const HISTORICAL_AI_BATCH_FALLBACK_LIMITS = [25, 10];
+		const DEFAULT_LOADED_AUTO_TRANSLATE_LIMIT = 50;
+		const LOADED_AUTO_TRANSLATE_LIMIT_MIN = 1;
+		const LOADED_AUTO_TRANSLATE_LIMIT_MAX = 100;
+		const LOADED_AUTO_TRANSLATE_RANGE_MODES = {COUNT: "count", TIME: "time"};
 		const AUTO_TRANSLATION_BOTTOM_LOCK_THRESHOLD = 80;
+		const MANUAL_TRANSLATION_SCROLL_LOCK_MS = 4500;
 		const DISCORD_EPOCH = 1420070400000;
 		
 		const defaultLanguages = {
@@ -586,8 +799,13 @@ module.exports = (_ => {
 			RECEIVED: "received",
 			SENT: "sent",
 		};
+		const AI_SKIP_TRANSLATION_TOKEN = "__SKIP_TRANSLATION__";
 	
 		return class Translator extends Plugin {
+			getVersion () {
+				return normalizeSemverVersion(this.version);
+			}
+
 			onLoad () {
 				_this = this;
 				
@@ -612,21 +830,30 @@ module.exports = (_ => {
 					choices: {},
 					filters: {
 						autoTranslateSourceLanguages:	{value: []},
-						receivedAutoTranslatePreset:	{value: "balanced"},
 						receivedAutoTranslateScope:	{value: "new_only"},
+						receivedAutoTranslateLoadedRangeMode: {value: "count"},
 						receivedAutoTranslateLoadedTimeWindow: {value: "1h"},
+						receivedAutoTranslateLoadedLimit: {value: "50"},
+						continueLoadedAutoTranslateOnScroll: {value: true},
+						pauseLoadedAutoTranslateWhileScrolling: {value: true},
 						receivedAutoTranslateSourceLanguages: {value: []},
-						skipMixedReceivedMessages:	{value: true},
+						autoTranslateDecisionMode: {value: "basic"},
+						aiAutoTranslatePrompt: {value: ""},
+						skipMixedReceivedMessages:	{value: false},
 						skipSameLanguageReceivedMessages: {value: true},
 						treatLanguageVariantsAsSame: {value: true},
 						dropSimilarTranslations:	{value: true},
-						minimumAutoTranslateLength:	{value: 6},
+						minimumAutoTranslateLength:	{value: 2},
 						translationSimilarityThreshold: {value: 0.9}
 					},
 					exceptions: {
 						wordStart:			{value: ["!"],	max: 3},
 						protectedTerms:		{value: [],		max: 80},
-						wrapperPairs:		{value: ['"|"', '“|”', '`|`'], max: 20}
+						protectedTermsForSent:	{value: true},
+						protectedTermsForReceived:	{value: true},
+						wrapperPairs:		{value: ['"|"', '“|”', '`|`'], max: 20},
+						wrapperPairsForSent:	{value: true},
+						wrapperPairsForReceived:	{value: true}
 					},
 					prefixes: {
 						translationPrefixData: 		{value: [
@@ -683,6 +910,26 @@ module.exports = (_ => {
 						color: var(--text-normal) !important;
 						text-align: left;
 					}
+					.translator-discord-emoji {
+						width: 1.375em;
+						height: 1.375em;
+						object-fit: contain;
+						vertical-align: -0.275em;
+						margin: 0 0.05em;
+					}
+					.translator-discord-mention {
+						display: inline;
+						padding: 0 2px;
+						border-radius: 3px;
+						background: var(--mention-background, color-mix(in srgb, var(--brand-500, #5865f2) 30%, transparent));
+						color: var(--mention-foreground, var(--brand-260, #c9cdfb)) !important;
+						font-weight: 500;
+						white-space: break-spaces;
+					}
+					.translator-discord-mention:hover {
+						background: var(--mention-background-hover, color-mix(in srgb, var(--brand-500, #5865f2) 45%, transparent));
+						color: var(--white-500, #fff) !important;
+					}
 					.translator-translated-message {
 						margin-top: 4px;
 						padding: 6px 10px 6px 12px;
@@ -729,6 +976,23 @@ module.exports = (_ => {
 						overflow: visible !important;
 						text-overflow: unset !important;
 					}
+					.translator-reply-preview-body .translator-translated-message,
+					.translator-reply-preview-text.translator-translated-message,
+					.translator-reply-preview-text .translator-translated-message {
+						margin: 0 !important;
+						padding: 0 !important;
+						border: 0 !important;
+						border-left: 0 !important;
+						background: transparent !important;
+						box-shadow: none !important;
+						color: inherit !important;
+					}
+					.translator-reply-preview-body [class*="translator"],
+					.translator-reply-preview-text [class*="translator"] {
+						background: transparent !important;
+						box-shadow: none !important;
+						color: inherit !important;
+					}
 					.translator-settings-inline-header {
 						display: flex;
 						align-items: center;
@@ -738,11 +1002,148 @@ module.exports = (_ => {
 					}
 					.translator-settings-panel-root {
 						overflow-anchor: none;
+						overflow-x: hidden;
+						max-width: 100%;
+						box-sizing: border-box;
 					}
 					.translator-settings-panel-root [class*="select"] {
 						overflow-anchor: none;
 					}
-					.translator-settings-inline-actions {
+										.translator-settings-panel-root {
+						overflow-anchor: none;
+					}
+					.translator-settings-panel-root [class*="select"],
+					.translator-settings-panel-root [class*="Select"],
+					.translator-settings-panel-root [role="combobox"],
+					.translator-stable-select-wrap,
+					.translator-stable-select-wrap * {
+						overflow-anchor: none;
+						scroll-margin-top: 0 !important;
+						scroll-margin-bottom: 0 !important;
+					}
+					.translator-stable-select-wrap {
+						width: 100%;
+						min-width: 0;
+						max-width: 100%;
+					}
+					.translator-prefix-translation-row {
+						display: grid;
+						grid-template-columns: minmax(76px, 0.75fr) minmax(0, 1.65fr) 34px;
+						gap: 10px;
+						align-items: center;
+						width: 100%;
+						max-width: 100%;
+						box-sizing: border-box;
+						margin-bottom: 8px;
+						overflow: hidden;
+					}
+					.translator-prefix-translation-cell,
+					.translator-prefix-translation-cell > * {
+						min-width: 0;
+						max-width: 100%;
+						box-sizing: border-box;
+					}
+					.translator-prefix-delete-cell {
+						display: flex;
+						align-items: center;
+						justify-content: flex-end;
+						min-width: 0;
+						max-width: 34px;
+						overflow: hidden;
+					}
+					.translator-prefix-delete-cell button {
+						width: 30px !important;
+						min-width: 30px !important;
+						max-width: 30px !important;
+						padding-left: 0 !important;
+						padding-right: 0 !important;
+					}
+					.translator-prefix-input-cell input,
+					.translator-prefix-language-cell .translator-stable-select-wrap,
+					.translator-prefix-language-cell [class*="select"],
+					.translator-prefix-language-cell [class*="Select"] {
+						min-width: 0 !important;
+						max-width: 100% !important;
+						box-sizing: border-box;
+					}
+					.translator-token-editor {
+						display: flex;
+						flex-direction: column;
+						gap: 8px;
+						width: 100%;
+						min-width: 0;
+					}
+					.translator-token-list {
+						display: flex;
+						flex-wrap: wrap;
+						align-content: flex-start;
+						gap: 6px;
+						width: 100%;
+						min-width: 0;
+						min-height: 44px;
+						max-height: 112px;
+						overflow-y: auto;
+						padding: 8px;
+						border: 1px solid var(--background-modifier-accent);
+						border-radius: 8px;
+						background: var(--input-background, var(--background-tertiary));
+						box-sizing: border-box;
+					}
+					.translator-token-empty {
+						color: var(--text-muted);
+						font-size: 12px;
+						line-height: 1.5;
+						padding: 2px 0;
+					}
+					.translator-token-badge {
+						display: inline-flex;
+						align-items: center;
+						max-width: 100%;
+						gap: 6px;
+						padding: 4px 8px;
+						border-radius: 6px;
+						background: var(--bdfdb-blurple);
+						color: #fff;
+						font-size: 12px;
+						line-height: 1.3;
+						box-sizing: border-box;
+					}
+					.translator-token-badge-text {
+						max-width: 100%;
+						overflow-wrap: anywhere;
+						word-break: break-word;
+						white-space: normal;
+					}
+					.translator-token-badge-delete {
+						display: inline-flex;
+						align-items: center;
+						justify-content: center;
+						width: 14px;
+						height: 14px;
+						flex: 0 0 auto;
+						cursor: pointer;
+						opacity: 0.92;
+					}
+					.translator-token-badge-delete:hover {
+						opacity: 1;
+					}
+					.translator-token-input-row,
+					.translator-token-input-row > * {
+						width: 100%;
+						min-width: 0;
+						max-width: 100%;
+						box-sizing: border-box;
+					}
+					@media (max-width: 620px) {
+						.translator-prefix-translation-row {
+							grid-template-columns: minmax(76px, 1fr) 34px;
+						}
+						.translator-prefix-language-cell {
+							grid-column: 1 / -1;
+						}
+					}
+
+.translator-settings-inline-actions {
 						display: flex;
 						flex-wrap: wrap;
 						justify-content: flex-end;
@@ -794,8 +1195,73 @@ module.exports = (_ => {
 						gap: 6px;
 						margin-top: 6px;
 					}
+					.translator-loaded-status-floating {
+						position: fixed;
+						z-index: 999;
+						display: inline-flex;
+						align-items: center;
+						gap: 6px;
+						width: auto !important;
+						min-width: 0 !important;
+						max-width: min(360px, calc(100vw - 32px));
+						padding: 4px 9px;
+						border: 1px solid var(--background-modifier-accent, rgba(255,255,255,0.08)) !important;
+						border-radius: 999px;
+						background: var(--background-floating, #232428) !important;
+						background: color-mix(in srgb, var(--background-floating, #232428) 90%, black 10%) !important;
+						box-shadow: 0 1px 3px rgba(0,0,0,0.32) !important;
+						color: var(--text-muted, #b5bac1);
+						font-size: 12px;
+						font-weight: 500;
+						line-height: 16px;
+						pointer-events: none;
+						backdrop-filter: none;
+						text-shadow: none;
+					}
+					.translator-loaded-status-floating::before,
+					.translator-loaded-status-floating::after {
+						content: none !important;
+						display: none !important;
+					}
+					.translator-loaded-status-dot {
+						width: 6px;
+						height: 6px;
+						border-radius: 50%;
+						background: var(--interactive-normal, #b5bac1);
+						box-shadow: none;
+						flex: 0 0 auto;
+					}
+					.translator-loaded-status-text {white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 100%;}
+					.translator-loaded-status-inline {
+						display: inline-flex;
+						align-items: center;
+						gap: 6px;
+						width: fit-content;
+						max-width: 100%;
+						margin: 6px 0 10px;
+						padding: 4px 9px;
+						border: 1px solid var(--background-modifier-accent, rgba(255,255,255,0.08));
+						border-radius: 999px;
+						background: color-mix(in srgb, var(--background-secondary, #2b2d31) 88%, black 12%);
+						color: var(--text-muted, #b5bac1);
+						font-size: 12px;
+						font-weight: 500;
+						line-height: 16px;
+						box-sizing: border-box;
+					}
+					.translator-loaded-status-inline-text {
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						min-width: 0;
+					}
+					.translator-native-color-input {
+						width: 34px; height: 32px; padding: 0; border: 1px solid var(--background-modifier-accent);
+						border-radius: 8px; background: transparent; cursor: pointer;
+					}
 					.translator-color-chip {
 						appearance: none;
+						position: relative;
 						display: inline-flex;
 						align-items: center;
 						justify-content: center;
@@ -835,6 +1301,23 @@ module.exports = (_ => {
 						color: var(--status-danger);
 						border-color: var(--status-danger);
 					}
+					.translator-color-chip-delete {
+						position: absolute;
+						top: -5px;
+						right: -5px;
+						width: 15px;
+						height: 15px;
+						border-radius: 50%;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						background: var(--status-danger);
+						color: white;
+						font-size: 11px;
+						font-weight: 700;
+						line-height: 1;
+						box-shadow: 0 0 0 2px var(--background-secondary-alt);
+					}
 					.translator-color-chip-code {
 						display: none;
 					}
@@ -854,6 +1337,19 @@ module.exports = (_ => {
 					}
 					.translator-color-custom-input {
 						flex: 1 1 auto;
+						min-width: 0;
+						height: 32px;
+						box-sizing: border-box;
+						padding: 0 10px;
+						border: 1px solid var(--background-modifier-accent);
+						border-radius: 8px;
+						background: var(--input-background, var(--background-tertiary));
+						color: var(--text-normal);
+						font: inherit;
+					}
+					.translator-color-custom-input:focus {
+						outline: none;
+						border-color: var(--brand-500, var(--text-link));
 					}
 					.translator-secret-input-row {
 						position: relative;
@@ -904,24 +1400,45 @@ module.exports = (_ => {
 						flex: 0 0 auto;
 					}
 					.translator-detector-panel {
-						margin-bottom: 12px;
-						padding: 12px;
-						border: 1px solid var(--background-modifier-accent);
+						margin-bottom: 14px;
+						padding: 12px 14px;
+						border: 1px solid rgba(255, 255, 255, 0.055);
 						border-radius: 8px;
-						background: var(--background-secondary-alt);
+						background: #202124;
+						background: color-mix(in srgb, var(--background-secondary, #2b2d31) 78%, black 22%);
+						box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+						box-sizing: border-box;
+					}
+					.translator-detector-panel .translator-settings-support-title {
+						margin-bottom: 4px;
+						font-size: 14px;
+						font-weight: 700;
+						line-height: 20px;
+						color: var(--header-primary, #ffffff);
+					}
+					.translator-detector-panel .translator-settings-support-hint {
+						margin-bottom: 10px;
+						font-size: 13px;
+						line-height: 1.45;
+						color: var(--text-muted, #949ba4);
+						opacity: 1;
 					}
 					.translator-detector-input-wrap {
 						position: relative;
 					}
 					.translator-detector-textinput input {
-						padding-right: 62px !important;
+						min-height: 34px !important;
+						padding-right: 68px !important;
+						border-color: rgba(255, 255, 255, 0.035) !important;
+						background: color-mix(in srgb, var(--background-tertiary, #1e1f22) 86%, black 14%) !important;
 					}
 					.translator-detector-input-button {
 						position: absolute !important;
 						top: 50%;
 						right: 8px;
 						height: 26px !important;
-						min-width: 42px !important;
+						min-width: 46px !important;
+						padding: 0 10px !important;
 						transform: translateY(-50%);
 						box-shadow: none !important;
 						z-index: 2;
@@ -929,12 +1446,50 @@ module.exports = (_ => {
 					.translator-detector-input-button:active {
 						transform: translateY(-50%) !important;
 					}
+					.translator-detector-result-row {
+						display: flex;
+						align-items: center;
+						justify-content: space-between;
+						gap: 10px;
+						margin-top: 10px;
+						padding: 8px 10px;
+						border: 1px solid rgba(255, 255, 255, 0.045);
+						border-radius: 7px;
+						background: color-mix(in srgb, var(--background-tertiary, #1e1f22) 86%, black 14%);
+					}
+					.translator-detector-result-text {
+						min-width: 0;
+						color: var(--text-muted, #949ba4);
+						font-size: 12.5px;
+						line-height: 1.4;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+					}
+					.translator-detector-apply-button {
+						flex: 0 0 auto;
+						height: 28px !important;
+						box-shadow: none !important;
+					}
 					.translator-settings-support-panel {
 						margin-bottom: 8px;
 						padding: 4px 0 0 0;
 						border: 0;
 						border-radius: 0;
 						background: transparent;
+					}
+					.translator-advanced-protection-section {
+						margin: 0 0 14px;
+						padding: 0 0 2px;
+					}
+					.translator-advanced-protection-section + .translator-advanced-protection-section {
+						margin-top: 16px;
+						padding-top: 16px;
+						border-top: 1px solid var(--background-modifier-accent);
+					}
+					.translator-advanced-protection-section .translator-settings-switch-group {
+						margin-top: 8px;
+						margin-bottom: 8px;
 					}
 					.translator-settings-support-row {
 						display: flex;
@@ -1000,6 +1555,82 @@ module.exports = (_ => {
 						color: var(--header-primary);
 						box-shadow: inset 0 0 0 1px var(--brand-500, var(--text-link));
 					}
+					.translator-segmented-button-disabled {
+						opacity: 0.45;
+						cursor: not-allowed;
+					}
+					.translator-segmented-button-disabled:hover {
+						background: transparent;
+						color: var(--text-muted);
+					}
+					.translator-decision-mode-grid {
+						display: grid;
+						grid-template-columns: 1fr 1fr;
+						gap: 4px;
+						width: 100%;
+						margin: 8px 0 10px;
+						padding: 3px;
+						border: 1px solid var(--background-modifier-accent);
+						border-radius: 7px;
+						background: var(--background-secondary, #2b2d31);
+					}
+					.translator-decision-mode-grid .translator-segmented-button {
+						width: 100%;
+						min-height: 34px;
+						border-radius: 5px;
+						font-size: 13px !important;
+						font-weight: 700 !important;
+						background: transparent;
+						color: var(--text-muted);
+					}
+					.translator-decision-mode-grid .translator-segmented-button:hover {
+						background: var(--background-modifier-hover);
+						color: var(--text-normal);
+					}
+					.translator-decision-mode-grid .translator-segmented-button-active {
+						background: var(--brand-500, #5865f2);
+						color: var(--white-500, #fff);
+						box-shadow: none;
+					}
+					.translator-decision-mode-grid .translator-segmented-button-disabled {
+						opacity: 0.45;
+					}
+					.translator-ai-prompt-textarea {
+						box-sizing: border-box;
+						width: 100%;
+						min-height: 118px;
+						margin: 8px 0;
+						padding: 10px 12px;
+						border: 1px solid var(--background-modifier-accent);
+						border-radius: 6px;
+						background: var(--input-background, var(--background-secondary, #2b2d31));
+						color: var(--text-normal);
+						font: inherit;
+						font-size: 13px;
+						line-height: 1.45;
+						resize: vertical;
+						outline: none;
+						scrollbar-width: thin;
+						scrollbar-color: var(--scrollbar-auto-thumb, var(--background-modifier-accent)) var(--input-background, var(--background-secondary, #2b2d31));
+					}
+					.translator-ai-prompt-textarea:focus {
+						border-color: var(--brand-500, #5865f2);
+					}
+					.translator-ai-prompt-textarea::-webkit-scrollbar {
+						width: 8px;
+					}
+					.translator-ai-prompt-textarea::-webkit-scrollbar-track {
+						background: var(--input-background, var(--background-secondary, #2b2d31));
+						border-radius: 8px;
+					}
+					.translator-ai-prompt-textarea::-webkit-scrollbar-thumb {
+						background: var(--scrollbar-auto-thumb, var(--background-modifier-accent));
+						border: 2px solid var(--input-background, var(--background-secondary, #2b2d31));
+						border-radius: 8px;
+					}
+					.translator-ai-prompt-textarea::-webkit-scrollbar-thumb:hover {
+						background: var(--scrollbar-auto-scrollbar-color-thumb, var(--interactive-muted));
+					}
 					.translator-preset-grid .translator-segmented-button {
 						min-width: 84px;
 					}
@@ -1010,6 +1641,78 @@ module.exports = (_ => {
 					.translator-window-grid .translator-segmented-button {
 						flex: 1 1 96px;
 						min-height: 34px;
+					}
+					.translator-scope-switch {
+						display: grid;
+						grid-template-columns: 1fr 1fr;
+						position: relative;
+						padding: 3px;
+						border: 1px solid var(--background-modifier-accent);
+						border-radius: 999px;
+						background: var(--background-tertiary, var(--background-secondary));
+						overflow: hidden;
+					}
+					.translator-scope-switch::before {
+						content: "";
+						position: absolute;
+						top: 3px;
+						bottom: 3px;
+						left: 3px;
+						width: calc(50% - 3px);
+						border-radius: 999px;
+						background: var(--background-secondary-alt);
+						box-shadow: inset 0 0 0 1px var(--brand-500, var(--text-link));
+						transition: transform 160ms ease;
+					}
+					.translator-scope-switch-loaded::before {
+						transform: translateX(100%);
+					}
+					.translator-scope-switch-button {
+						appearance: none;
+						position: relative;
+						z-index: 1;
+						height: 32px;
+						padding: 0 12px;
+						border: 0;
+						border-radius: 999px;
+						background: transparent;
+						box-shadow: none;
+						color: var(--text-muted);
+						cursor: pointer;
+						font: inherit;
+						font-size: 12px !important;
+						font-weight: 700 !important;
+						line-height: 1;
+					}
+					.translator-scope-switch-button-active {
+						color: var(--header-primary);
+					}
+					.translator-loaded-warning {
+						margin: 7px 2px 4px;
+						font-size: 12px;
+						line-height: 1.45;
+						color: var(--text-muted);
+					}
+					.translator-loaded-limit-row {
+						display: grid;
+						grid-template-columns: minmax(160px, 1fr) minmax(210px, 1.2fr);
+						align-items: center;
+						gap: 12px;
+						margin: 10px 2px 4px;
+					}
+					.translator-loaded-limit-title {
+						font-size: 13px;
+						font-weight: 600;
+						color: var(--header-primary);
+					}
+					.translator-loaded-limit-input {
+						width: 100%;
+					}
+					.translator-loaded-window-switch {
+						grid-template-columns: repeat(5, 1fr);
+					}
+					.translator-loaded-window-switch::before {
+						display: none;
 					}
 					.translator-preset-grid {
 						display: flex;
@@ -1058,6 +1761,176 @@ module.exports = (_ => {
 						margin-top: 10px;
 						padding-top: 6px;
 					}
+					.translator-popout-auto-panel {
+						margin-top: 12px;
+						padding-top: 0;
+					}
+					.translator-popout-auto-panel .translator-quick-channel-toggle {
+						margin: 0 0 12px !important;
+					}
+					.translator-quick-strategy-panel {
+						margin-top: 10px;
+						padding: 12px 14px;
+						border: 1px solid rgba(255, 255, 255, 0.055);
+						border-radius: 8px;
+						background: #202124;
+						background: color-mix(in srgb, var(--background-secondary, #2b2d31) 78%, black 22%);
+						box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+						box-sizing: border-box;
+					}
+					.translator-quick-strategy-panel .translator-quick-strategy-title {
+						display: flex;
+						align-items: center;
+						min-height: 22px;
+						margin: 0 0 9px;
+						padding: 0 0 8px;
+						border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+						font-size: 14px !important;
+						font-weight: 700;
+						line-height: 22px;
+						color: var(--header-primary, #ffffff);
+					}
+					.translator-quick-strategy-panel .translator-quick-control-row {
+						display: grid;
+						grid-template-columns: 132px minmax(0, 1fr);
+						column-gap: 16px;
+						align-items: center;
+						min-height: 36px;
+						margin: 6px 0;
+					}
+					.translator-quick-strategy-panel .translator-quick-control-row-muted {
+						opacity: 0.48 !important;
+					}
+					.translator-quick-strategy-panel .translator-quick-control-label {
+						font-size: 14px !important;
+						font-weight: 600 !important;
+						line-height: 22px !important;
+						color: var(--text-normal, #dbdee1);
+					}
+					.translator-quick-strategy-panel .translator-quick-control-component-wrapper {
+						width: 100%;
+						max-width: none;
+						justify-self: stretch;
+						display: flex;
+						align-items: center;
+					}
+					.translator-quick-strategy-panel .translator-quick-segment {
+						display: grid;
+						grid-template-columns: 1fr 1fr;
+						gap: 2px;
+						width: 100%;
+						height: 34px;
+						padding: 2px;
+						border: 1px solid rgba(255, 255, 255, 0.035);
+						border-radius: 7px;
+						background: #18191c;
+						background: color-mix(in srgb, var(--background-tertiary, #1e1f22) 86%, black 14%);
+						box-sizing: border-box;
+					}
+					.translator-quick-strategy-panel .translator-quick-segment-button {
+						appearance: none;
+						display: inline-flex;
+						align-items: center;
+						justify-content: center;
+						height: 100%;
+						padding: 0 12px;
+						border: 0;
+						border-radius: 5px;
+						background: transparent;
+						box-shadow: none;
+						color: var(--text-muted, #949ba4);
+						cursor: pointer;
+						font: inherit;
+						font-size: 13px !important;
+						font-weight: 600 !important;
+						line-height: 1;
+						white-space: nowrap;
+						transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+					}
+					.translator-quick-strategy-panel .translator-quick-segment-button:hover {
+						background: var(--background-modifier-hover, rgba(255, 255, 255, 0.04));
+						color: var(--text-normal, #dbdee1);
+					}
+					.translator-quick-strategy-panel .translator-quick-segment-button-active {
+						background: var(--brand-500, #5865f2) !important;
+						color: var(--white-500, #ffffff) !important;
+						font-weight: 700 !important;
+						box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-row .translator-quick-control-component-wrapper {
+						justify-content: flex-end;
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper {
+						width: 112px;
+						height: 34px;
+						flex: 0 0 112px;
+						display: grid;
+						grid-template-columns: minmax(0, 1fr) 22px;
+						align-items: stretch;
+						overflow: hidden;
+						border: 1px solid rgba(255, 255, 255, 0.035);
+						border-radius: 7px;
+						background: #18191c;
+						background: color-mix(in srgb, var(--background-tertiary, #1e1f22) 86%, black 14%);
+						box-sizing: border-box;
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper:focus-within {
+						border-color: var(--brand-500, #5865f2);
+						box-shadow: 0 0 0 1px rgba(88, 101, 242, 0.28);
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper-input {
+						width: 100%;
+						height: 32px;
+						min-height: 32px;
+						padding: 0 4px 0 10px;
+						border: 0;
+						outline: none;
+						background: transparent;
+						color: var(--text-normal, #dbdee1);
+						text-align: center;
+						font-size: 14px;
+						font-weight: 600;
+						line-height: 32px;
+						box-sizing: border-box;
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper-buttons {
+						display: grid;
+						grid-template-rows: 1fr 1fr;
+						border-left: 1px solid rgba(255, 255, 255, 0.04);
+						background: rgba(255, 255, 255, 0.018);
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper-button {
+						appearance: none;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						width: 22px;
+						height: 16px;
+						padding: 0;
+						border: 0;
+						background: transparent;
+						color: var(--text-muted, #949ba4);
+						cursor: pointer;
+						font: inherit;
+						font-size: 8px;
+						font-weight: 700;
+						line-height: 1;
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper-button:hover {
+						background: rgba(255, 255, 255, 0.055);
+						color: var(--text-normal, #dbdee1);
+					}
+					.translator-quick-strategy-panel .translator-quick-limit-stepper-button + .translator-quick-limit-stepper-button {
+						border-top: 1px solid rgba(255, 255, 255, 0.035);
+					}
+					.translator-quick-strategy-panel .translator-quick-hint {
+						margin-top: 10px;
+						padding-top: 8px;
+						border-top: 1px solid rgba(255, 255, 255, 0.06);
+						font-size: 12px;
+						line-height: 1.45;
+						color: var(--text-muted, #80848e);
+					}
 					.translator-popout-channel-toggle {
 						margin-top: 0;
 						padding-top: 0;
@@ -1078,7 +1951,8 @@ module.exports = (_ => {
 				}});
 				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageToolbarUtils, "useMessageMenu", {after: e => {
 					if (e.instance.props.message && e.instance.props.channel) {
-						let translated = !!translatedMessages[e.instance.props.message.id];
+						const channelId = e.instance.props.channel && e.instance.props.channel.id || null;
+						let translated = !!this.getActiveMessageTranslation(e.instance.props.message, channelId);
 						let [children, index] = BDFDB.ContextMenuUtils.findItem(e.returnValue, {id: ["copy-text", "pin", "unpin"]});
 						if (index == -1) [children, index] = BDFDB.ContextMenuUtils.findItem(e.returnValue, {id: ["edit", "add-reaction", "add-reaction-1", "quote"]});
 						children.splice(index + 1, 0, BDFDB.ContextMenuUtils.createItem(BDFDB.LibraryComponents.MenuItems.MenuItem, {
@@ -1088,7 +1962,7 @@ module.exports = (_ => {
 							icon: _ => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.MenuItems.MenuIcon, {
 								icon: translated ? translateIconUntranslate : translateIcon
 							}),
-							action: _ => this.translateMessage(e.instance.props.message, e.instance.props.channel)
+							action: _ => this.translateMessage(e.instance.props.message, e.instance.props.channel, {manual: true, independentOfTextAreaSwitch: true})
 						}));
 						this.injectMessageLanguageActions(children, index + 1, e.instance.props.message, e.instance.props.channel);
 					}
@@ -1099,7 +1973,17 @@ module.exports = (_ => {
 			onStop () {
 				if (translationCacheSaveTimer) clearTimeout(translationCacheSaveTimer);
 				if (translationRerenderTimer) clearTimeout(translationRerenderTimer);
+				if (deferredTextAreaRerenderTimer) clearTimeout(deferredTextAreaRerenderTimer);
 				if (autoTranslationQueueRetryTimer) clearTimeout(autoTranslationQueueRetryTimer);
+				if (historicalAutoTranslationStartTimer) clearTimeout(historicalAutoTranslationStartTimer);
+				if (historicalAutoTranslationScrollScanTimer) clearTimeout(historicalAutoTranslationScrollScanTimer);
+				if (historicalAutoTranslationPostBatchScanTimer) clearTimeout(historicalAutoTranslationPostBatchScanTimer);
+				if (deferredSettingsRerenderTimer) clearTimeout(deferredSettingsRerenderTimer);
+				if (manualTranslationScrollLockTimer) clearTimeout(manualTranslationScrollLockTimer);
+				manualTranslationScrollLockTimer = null;
+				manualTranslationScrollAnchor = null;
+				deferredSettingsRerenderTimer = null;
+				this.clearLoadedAutoTranslationStatus();
 				this.forceUpdateAll();
 			}
 
@@ -1111,32 +1995,71 @@ module.exports = (_ => {
 						let settingsItems = [];
 						const recommendedEngines = ["microsoft", "googlecloud", "googleapi", "deepseek", "oaicompat"];
 						const getSettingsPanelRoot = () => document.querySelector(".translator-settings-panel-root");
-						const findScrollableParent = node => {
-							let current = node;
-							while (current && current.parentElement) {
-								current = current.parentElement;
-								if (!current) break;
-								const style = window.getComputedStyle(current);
-								const overflowY = style && style.overflowY;
-								if ((overflowY == "auto" || overflowY == "scroll") && current.scrollHeight > current.clientHeight) return current;
+						const isScrollableElement = node => {
+							if (!node || node == document || node == document.body || node == document.documentElement) return false;
+							if (typeof node.scrollTop != "number" || typeof node.scrollHeight != "number" || typeof node.clientHeight != "number") return false;
+							if (node.scrollHeight <= node.clientHeight + 1) return false;
+							let overflowY = "";
+							try {
+								const style = window.getComputedStyle(node);
+								overflowY = style && style.overflowY || "";
 							}
-							return null;
+							catch (err) {}
+							// Discord/BDFDB scrollers can use generated classes or overlay/hidden overflow, so relying only on auto/scroll misses the real modal scroller.
+							return overflowY != "visible" && overflowY != "clip" || node.scrollTop > 0;
+						};
+						const getSettingsPanelScrollElements = root => {
+							const scrollers = [];
+							const addScroller = node => {
+								if (node && isScrollableElement(node) && !scrollers.includes(node)) scrollers.push(node);
+							};
+							let current = root;
+							while (current && current.parentElement) {
+								addScroller(current);
+								current = current.parentElement;
+							}
+							addScroller(current);
+							try {
+								for (const node of document.querySelectorAll("div")) {
+									if (node.scrollTop > 0) addScroller(node);
+								}
+							}
+							catch (err) {}
+							return scrollers;
 						};
 						const captureSettingsPanelScrollState = () => {
 							const root = getSettingsPanelRoot();
-							const scroller = root && findScrollableParent(root);
-							if (!scroller) return null;
+							if (!root) return null;
+							const scrollers = getSettingsPanelScrollElements(root);
+							if (!scrollers.length) return null;
 							return {
-								scroller,
-								scrollTop: scroller.scrollTop
+								items: scrollers.map(scroller => ({
+									scroller,
+									scrollTop: scroller.scrollTop,
+									scrollLeft: scroller.scrollLeft
+								})),
+								windowX: typeof window != "undefined" ? window.scrollX : 0,
+								windowY: typeof window != "undefined" ? window.scrollY : 0
 							};
 						};
+						const applySettingsPanelScrollState = scrollState => {
+							if (!scrollState || !scrollState.items) return;
+							for (const item of scrollState.items) {
+								if (!item || !item.scroller) continue;
+								const maxScrollTop = Math.max(0, item.scroller.scrollHeight - item.scroller.clientHeight);
+								const maxScrollLeft = Math.max(0, item.scroller.scrollWidth - item.scroller.clientWidth);
+								item.scroller.scrollTop = Math.max(0, Math.min(item.scrollTop, maxScrollTop));
+								item.scroller.scrollLeft = Math.max(0, Math.min(item.scrollLeft || 0, maxScrollLeft));
+							}
+							if (typeof window != "undefined") window.scrollTo(scrollState.windowX || 0, scrollState.windowY || 0);
+						};
 						const restoreSettingsPanelScrollState = scrollState => {
-							if (!scrollState || !scrollState.scroller) return;
-							requestAnimationFrame(() => requestAnimationFrame(() => {
-								const maxScrollTop = Math.max(0, scrollState.scroller.scrollHeight - scrollState.scroller.clientHeight);
-								scrollState.scroller.scrollTo({top: Math.max(0, Math.min(scrollState.scrollTop, maxScrollTop))});
-							}));
+							if (!scrollState) return;
+							applySettingsPanelScrollState(scrollState);
+							requestAnimationFrame(() => {
+								applySettingsPanelScrollState(scrollState);
+								requestAnimationFrame(() => applySettingsPanelScrollState(scrollState));
+							});
 						};
 						const refreshPanel = () => {
 							const scrollState = captureSettingsPanelScrollState();
@@ -1150,7 +2073,6 @@ module.exports = (_ => {
 							this.SettingsUpdated = true;
 						};
 						const saveReceivedFilterSetting = (key, value) => {
-							saveFilterSetting("receivedAutoTranslatePreset", "custom");
 							saveFilterSetting(key, value);
 						};
 						const infoText = text => BDFDB.ReactUtils.createElement("div", {
@@ -1180,17 +2102,112 @@ module.exports = (_ => {
 							onClick,
 							children: label
 						});
-						const createStableSelect = props => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Select, Object.assign({
-							menuShouldScrollIntoView: false,
-							menuPosition: "fixed",
-							closeMenuOnSelect: true
-						}, props));
+						let stableSelectScrollState = null;
+						let stableSelectScrollIntoViewOriginal = null;
+						let stableSelectScrollLockTimer = null;
+						const restoreStableSelectScrollIntoView = _ => {
+							try {
+								if (stableSelectScrollIntoViewOriginal && typeof Element != "undefined" && Element.prototype.scrollIntoView != stableSelectScrollIntoViewOriginal) Element.prototype.scrollIntoView = stableSelectScrollIntoViewOriginal;
+							}
+							catch (err) {}
+							stableSelectScrollIntoViewOriginal = null;
+						};
+						const lockStableSelectScrollIntoView = (duration = 900) => {
+							try {
+								if (typeof Element == "undefined" || !Element.prototype || typeof Element.prototype.scrollIntoView != "function") return;
+								if (!stableSelectScrollIntoViewOriginal) {
+									stableSelectScrollIntoViewOriginal = Element.prototype.scrollIntoView;
+									Element.prototype.scrollIntoView = function () {
+										if (this && this.closest && this.closest(".translator-settings-panel-root")) return;
+										return stableSelectScrollIntoViewOriginal.apply(this, arguments);
+									};
+								}
+								if (stableSelectScrollLockTimer) clearTimeout(stableSelectScrollLockTimer);
+								stableSelectScrollLockTimer = setTimeout(restoreStableSelectScrollIntoView, duration);
+							}
+							catch (err) {}
+						};
+						const restoreStableSelectScroll = (scrollState, repeat = false) => {
+							if (!scrollState) return;
+							const apply = _ => restoreSettingsPanelScrollState(scrollState);
+							requestAnimationFrame(apply);
+							setTimeout(apply, 0);
+							if (repeat) [16, 40, 80, 160, 320, 520].forEach(delay => setTimeout(apply, delay));
+						};
+						const createStableSelect = props => {
+							const getScrollState = _ => stableSelectScrollState || captureSettingsPanelScrollState();
+							const rememberScroll = _ => {
+								stableSelectScrollState = captureSettingsPanelScrollState();
+								return stableSelectScrollState;
+							};
+							const rememberAndSoftRestore = (repeat = false) => {
+								const scrollState = rememberScroll();
+								lockStableSelectScrollIntoView(repeat ? 1200 : 700);
+								restoreStableSelectScroll(scrollState, repeat);
+								return scrollState;
+							};
+							const callHandler = (name, event) => {
+								if (props && typeof props[name] == "function") return props[name](event);
+							};
+							const captureOnly = _ => {
+								rememberScroll();
+								lockStableSelectScrollIntoView(900);
+							};
+							const selectProps = Object.assign({
+								menuShouldScrollIntoView: false,
+								menuShouldBlockScroll: false,
+								captureMenuScroll: false,
+								menuPosition: "fixed",
+								menuPlacement: "auto",
+								menuPortalTarget: typeof document != "undefined" ? document.body : undefined,
+								closeMenuOnSelect: true,
+								maxMenuHeight: typeof window != "undefined" ? Math.max(150, Math.min(240, Math.floor(window.innerHeight * 0.36))) : 220
+							}, props);
+							selectProps.onMouseDown = event => {
+								rememberAndSoftRestore(true);
+								callHandler("onMouseDown", event);
+							};
+							selectProps.onPointerDown = event => {
+								rememberAndSoftRestore(true);
+								callHandler("onPointerDown", event);
+							};
+							selectProps.onClick = event => {
+								rememberAndSoftRestore(true);
+								callHandler("onClick", event);
+							};
+							selectProps.onKeyDown = event => {
+								if (event && ["Enter", " ", "ArrowDown", "ArrowUp"].includes(event.key)) rememberAndSoftRestore(true);
+								callHandler("onKeyDown", event);
+							};
+							selectProps.onFocus = event => {
+								rememberAndSoftRestore(true);
+								callHandler("onFocus", event);
+							};
+							selectProps.onMenuOpen = _ => {
+								rememberAndSoftRestore(true);
+								callHandler("onMenuOpen");
+							};
+							selectProps.onMenuClose = _ => {
+								const scrollState = getScrollState();
+								callHandler("onMenuClose");
+								restoreStableSelectScroll(scrollState, true);
+								setTimeout(_ => {stableSelectScrollState = null;}, 450);
+							};
+							return BDFDB.ReactUtils.createElement("div", {
+								className: "translator-stable-select-wrap",
+								onMouseDownCapture: captureOnly,
+								onPointerDownCapture: captureOnly,
+								onFocusCapture: captureOnly,
+								children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Select, selectProps)
+							});
+						};
 						const createSegmentedSelector = ({options, value, onChange, className = ""}) => BDFDB.ReactUtils.createElement("div", {
 							className: BDFDB.DOMUtils.formatClassName("translator-segmented-group", className),
 							children: options.map(option => BDFDB.ReactUtils.createElement("button", {
 								type: "button",
-								className: BDFDB.DOMUtils.formatClassName("translator-segmented-button", option.value == value && "translator-segmented-button-active"),
-								onClick: _ => onChange(option.value),
+								disabled: !!option.disabled,
+								className: BDFDB.DOMUtils.formatClassName("translator-segmented-button", option.value == value && "translator-segmented-button-active", option.disabled && "translator-segmented-button-disabled"),
+								onClick: _ => !option.disabled && onChange(option.value),
 								children: option.label
 							}))
 						});
@@ -1240,6 +2257,115 @@ module.exports = (_ => {
 								})
 							]
 						});
+						const createExceptionScopeSwitches = (sentKey, receivedKey, sentLabelKey, receivedLabelKey) => BDFDB.ReactUtils.createElement("div", {
+							className: "translator-settings-switch-group",
+							children: [
+								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsItem, {
+									type: "Switch",
+									className: "translator-settings-switch-row",
+									label: this.getCustomText(sentLabelKey),
+									tag: BDFDB.LibraryComponents.FormTitle.Tags.H5,
+									value: this.getExceptionScopeSetting(sentKey, true),
+									onChange: value => {
+										if (!this.settings.exceptions) this.settings.exceptions = {};
+										this.settings.exceptions[sentKey] = !!value;
+										BDFDB.DataUtils.save(!!value, this, "exceptions", sentKey);
+										this.SettingsUpdated = true;
+									}
+								}),
+								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsItem, {
+									type: "Switch",
+									className: "translator-settings-switch-row",
+									label: this.getCustomText(receivedLabelKey),
+									tag: BDFDB.LibraryComponents.FormTitle.Tags.H5,
+									value: this.getExceptionScopeSetting(receivedKey, true),
+									onChange: value => {
+										if (!this.settings.exceptions) this.settings.exceptions = {};
+										this.settings.exceptions[receivedKey] = !!value;
+										BDFDB.DataUtils.save(!!value, this, "exceptions", receivedKey);
+										this.SettingsUpdated = true;
+									}
+								})
+							]
+						});
+						const createStackedTokenInput = ({items, maxLength, placeholder, emptyText, onChange}) => BDFDB.ReactUtils.createElement(class extends BdApi.React.Component {
+							constructor(props) {
+								super(props);
+								this.state = {
+									value: "",
+									items: BDFDB.ArrayUtils.is(props.items) ? [].concat(props.items) : []
+								};
+							}
+							componentDidUpdate(prevProps) {
+								const previousItems = BDFDB.ArrayUtils.is(prevProps.items) ? prevProps.items : [];
+								const nextItems = BDFDB.ArrayUtils.is(this.props.items) ? this.props.items : [];
+								if (JSON.stringify(previousItems) != JSON.stringify(nextItems)) this.setState({items: [].concat(nextItems)});
+							}
+							commitValue(rawValue) {
+								let value = String(rawValue == null ? this.state.value : rawValue).trim();
+								if (!value) return;
+								if (typeof this.props.maxLength == "number" && this.props.maxLength > 0) value = value.slice(0, this.props.maxLength);
+								const currentItems = BDFDB.ArrayUtils.is(this.state.items) ? this.state.items : [];
+								if (currentItems.includes(value)) {
+									this.setState({value: ""});
+									return;
+								}
+								const nextItems = [].concat(currentItems, value);
+								this.setState({value: "", items: nextItems});
+								this.props.onChange(nextItems);
+							}
+							removeItem(targetItem) {
+								const currentItems = BDFDB.ArrayUtils.is(this.state.items) ? this.state.items : [];
+								const nextItems = currentItems.filter(item => item != targetItem);
+								this.setState({items: nextItems});
+								this.props.onChange(nextItems);
+							}
+							render() {
+								const currentItems = BDFDB.ArrayUtils.is(this.state.items) ? this.state.items : [];
+								return BDFDB.ReactUtils.createElement("div", {
+									className: "translator-token-editor",
+									children: [
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-token-list",
+											children: currentItems.length ? currentItems.map(item => BDFDB.ReactUtils.createElement("div", {
+												className: "translator-token-badge",
+												key: item,
+												children: [
+													BDFDB.ReactUtils.createElement("span", {
+														className: "translator-token-badge-text",
+														children: item
+													}),
+													BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SvgIcon, {
+														className: "translator-token-badge-delete",
+														name: BDFDB.LibraryComponents.SvgIcon.Names.CLOSE,
+														onClick: _ => this.removeItem(item)
+													})
+												]
+											})) : BDFDB.ReactUtils.createElement("div", {
+												className: "translator-token-empty",
+												children: emptyText || placeholder
+											})
+										}),
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-token-input-row",
+											children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TextInput, {
+												value: this.state.value,
+												placeholder,
+												maxLength,
+												onChange: value => this.setState({value}),
+												onKeyDown: event => {
+													if (event.which == 13) {
+														event.preventDefault();
+														this.commitValue();
+													}
+												},
+												onBlur: _ => this.commitValue()
+											})
+										})
+									]
+								});
+							}
+						}, {items, maxLength, placeholder, emptyText, onChange});
 						const createDisablePrefixForm = () => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
 							title: this.getCustomText("disable_prefix_title"),
 							className: BDFDB.disCN.marginbottom8,
@@ -1258,32 +2384,40 @@ module.exports = (_ => {
 						});
 						const createProtectedTermsForm = () => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
 							title: this.getCustomText("protected_terms_title"),
-							className: BDFDB.disCN.marginbottom8,
+							className: BDFDB.DOMUtils.formatClassName(BDFDB.disCN.marginbottom8, "translator-advanced-protection-section translator-advanced-protection-terms"),
 							children: [
 								infoText(this.getCustomText("protected_terms_hint")),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.ListInput, {
+								createExceptionScopeSwitches("protectedTermsForSent", "protectedTermsForReceived", "protected_terms_scope_sent", "protected_terms_scope_received"),
+								createStackedTokenInput({
 									placeholder: this.getCustomText("protected_terms_placeholder"),
+									emptyText: this.getCustomText("protected_terms_placeholder"),
 									maxLength: this.defaults.exceptions.protectedTerms.max,
 									items: this.settings.exceptions.protectedTerms || [],
 									onChange: value => {
+										const nextValue = BDFDB.ArrayUtils.is(value) ? [].concat(value) : [];
+										this.settings.exceptions.protectedTerms = nextValue;
 										this.SettingsUpdated = true;
-										BDFDB.DataUtils.save(value, this, "exceptions", "protectedTerms");
+										BDFDB.DataUtils.save(nextValue, this, "exceptions", "protectedTerms");
 									}
 								})
 							]
 						});
 						const createWrapperPairsForm = () => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
 							title: this.getCustomText("wrapper_pairs_title"),
-							className: BDFDB.disCN.marginbottom8,
+							className: BDFDB.DOMUtils.formatClassName(BDFDB.disCN.marginbottom8, "translator-advanced-protection-section translator-advanced-protection-wrapper"),
 							children: [
 								infoText(this.getCustomText("wrapper_pairs_hint")),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.ListInput, {
+								createExceptionScopeSwitches("wrapperPairsForSent", "wrapperPairsForReceived", "wrapper_pairs_scope_sent", "wrapper_pairs_scope_received"),
+								createStackedTokenInput({
 									placeholder: this.getCustomText("wrapper_pairs_placeholder"),
+									emptyText: this.getCustomText("wrapper_pairs_placeholder"),
 									maxLength: this.defaults.exceptions.wrapperPairs.max,
-									items: this.settings.exceptions.wrapperPairs || [],
+									items: this.getWrapperPairItemsForSettings(),
 									onChange: value => {
+										const nextValue = (BDFDB.ArrayUtils.is(value) ? value : []).filter(rule => !this.isDiscordSpoilerWrapperRule(rule));
+										this.settings.exceptions.wrapperPairs = [].concat(nextValue);
 										this.SettingsUpdated = true;
-										BDFDB.DataUtils.save(value, this, "exceptions", "wrapperPairs");
+										BDFDB.DataUtils.save(nextValue, this, "exceptions", "wrapperPairs");
 									}
 								})
 							]
@@ -1293,14 +2427,11 @@ module.exports = (_ => {
 							className: BDFDB.disCN.marginbottom8,
 							children: [
 								infoText(this.getCustomText("translate_prefix_hint")),
-								...(this.settings.prefixes.translationPrefixData || []).map((entry, index) => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex, {
-									className: BDFDB.disCN.marginbottom8,
-									align: BDFDB.LibraryComponents.Flex.Align.CENTER,
+								...(this.settings.prefixes.translationPrefixData || []).map((entry, index) => BDFDB.ReactUtils.createElement("div", {
+									className: "translator-prefix-translation-row",
 									children: [
-										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex.Child, {
-											grow: 0,
-											shrink: 0,
-											basis: "30%",
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-prefix-translation-cell translator-prefix-input-cell",
 											children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TextInput, {
 												placeholder: this.getCustomText("translate_prefix_placeholder"),
 												value: entry.prefix,
@@ -1311,10 +2442,8 @@ module.exports = (_ => {
 												}
 											})
 										}),
-										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex.Child, {
-											grow: 1,
-											shrink: 0,
-											basis: "60%",
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-prefix-translation-cell translator-prefix-language-cell",
 											children: createStableSelect({
 												value: entry.language,
 												options: Object.keys(languages)
@@ -1331,10 +2460,8 @@ module.exports = (_ => {
 												}
 											})
 										}),
-										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex.Child, {
-											grow: 0,
-											shrink: 0,
-											basis: "10%",
+										BDFDB.ReactUtils.createElement("div", {
+											className: "translator-prefix-translation-cell translator-prefix-delete-cell",
 											children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Button, {
 												color: BDFDB.LibraryComponents.Button.Colors.RED,
 												size: BDFDB.LibraryComponents.Button.Sizes.TINY,
@@ -1373,6 +2500,18 @@ module.exports = (_ => {
 						const saveTranslatedTextColor = color => {
 							color = (color || "").trim() || "#7cc7ff";
 							this.settings.general.translatedTextColor = color;
+							if (!BDFDB.ArrayUtils.is(this.settings.general.customTranslatedTextColors)) this.settings.general.customTranslatedTextColors = [];
+							if (!this.getTranslatedTextColorPresets().includes(color) && !this.settings.general.customTranslatedTextColors.includes(color)) this.settings.general.customTranslatedTextColors.unshift(color);
+							this.settings.general.customTranslatedTextColors = this.settings.general.customTranslatedTextColors.filter((value, index, array) => value && array.indexOf(value) == index).slice(0, 12);
+							BDFDB.DataUtils.save(this.settings.general, this, "general");
+							this.SettingsUpdated = true;
+							refreshPanel();
+						};
+						const removeTranslatedTextColor = color => {
+							color = (color || "").trim();
+							if (!color || this.getTranslatedTextColorPresets().includes(color)) return;
+							this.settings.general.customTranslatedTextColors = (this.settings.general.customTranslatedTextColors || []).filter(savedColor => savedColor != color);
+							if (this.getTranslatedTextColor() == color) this.settings.general.translatedTextColor = this.getTranslatedTextColorPresets()[0] || "#7cc7ff";
 							BDFDB.DataUtils.save(this.settings.general, this, "general");
 							this.SettingsUpdated = true;
 							refreshPanel();
@@ -1382,7 +2521,10 @@ module.exports = (_ => {
 							const colorState = ensureTranslatedTextColorState();
 							colorState.showCustom = false;
 							colorState.customValue = defaultColor;
-							saveTranslatedTextColor(defaultColor);
+							this.settings.general.translatedTextColor = defaultColor;
+							BDFDB.DataUtils.save(this.settings.general, this, "general");
+							this.SettingsUpdated = true;
+							refreshPanel();
 						};
 						const ensureTranslatedTextColorState = () => {
 							if (!this.translatedTextColorState) this.translatedTextColorState = {
@@ -1392,27 +2534,41 @@ module.exports = (_ => {
 							if (!this.translatedTextColorState.customValue) this.translatedTextColorState.customValue = this.getTranslatedTextColor();
 							return this.translatedTextColorState;
 						};
-						const createColorChip = (color, active) => BDFDB.ReactUtils.createElement("button", {
-							type: "button",
-							className: BDFDB.DOMUtils.formatClassName("translator-color-chip", active && "translator-color-chip-active"),
-							title: color,
-							onClick: _ => {
-								const colorState = ensureTranslatedTextColorState();
-								colorState.showCustom = false;
-								colorState.customValue = color;
-								saveTranslatedTextColor(color);
-							},
-							children: [
-								BDFDB.ReactUtils.createElement("span", {
-									className: "translator-color-chip-code",
-									children: color
-								}),
-								BDFDB.ReactUtils.createElement("span", {
-									className: "translator-settings-color-swatch",
-									style: {background: color}
-								})
-							]
-						});
+						const getCustomTranslatedTextColors = () => BDFDB.ArrayUtils.is(this.settings.general.customTranslatedTextColors) ? this.settings.general.customTranslatedTextColors : [];
+						const createColorChip = (color, active) => {
+							const isCustomColor = getCustomTranslatedTextColors().includes(color) && !this.getTranslatedTextColorPresets().includes(color);
+							return BDFDB.ReactUtils.createElement("button", {
+								type: "button",
+								className: BDFDB.DOMUtils.formatClassName("translator-color-chip", active && "translator-color-chip-active"),
+								title: isCustomColor ? `${color} · ${compactText("点击选择，点 × 删除", "Click to select, click × to delete", "Нажмите для выбора, × для удаления")}` : color,
+								onClick: _ => {
+									const colorState = ensureTranslatedTextColorState();
+									colorState.showCustom = false;
+									colorState.customValue = color;
+									saveTranslatedTextColor(color);
+								},
+								children: [
+									BDFDB.ReactUtils.createElement("span", {
+										className: "translator-color-chip-code",
+										children: color
+									}),
+									BDFDB.ReactUtils.createElement("span", {
+										className: "translator-settings-color-swatch",
+										style: {background: color}
+									}),
+									isCustomColor && BDFDB.ReactUtils.createElement("span", {
+										className: "translator-color-chip-delete",
+										title: compactText("删除这个自定义颜色", "Delete this custom color", "Удалить этот цвет"),
+										onClick: event => {
+											event.preventDefault();
+											event.stopPropagation();
+											removeTranslatedTextColor(color);
+										},
+										children: "×"
+									})
+								].filter(Boolean)
+							});
+						};
 						const createColorOptionLabel = color => BDFDB.ReactUtils.createElement("div", {
 							className: "translator-settings-color-option",
 							children: [
@@ -1517,13 +2673,6 @@ module.exports = (_ => {
 							BDFDB.DataUtils.save(value, this, "filters", key);
 							this.SettingsUpdated = true;
 						};
-						const applyReceivedPreset = preset => {
-							const profiles = this.getReceivedAutoTranslatePresetProfiles();
-							const profile = profiles[preset] || profiles.balanced;
-							saveFilterSetting("receivedAutoTranslatePreset", preset || "balanced");
-							if (profile.values) Object.keys(profile.values).forEach(key => saveFilterSetting(key, profile.values[key]));
-							refreshPanel();
-						};
 						const createLanguageOptions = direction => Object.keys(languages)
 							.filter(key => !languages[key].special && (direction == languageTypes.INPUT || !languages[key].auto))
 							.map(key => ({
@@ -1594,13 +2743,6 @@ module.exports = (_ => {
 										className: "translator-color-palette",
 										children: [
 											...presetColors.map(color => createColorChip(color, color == currentColor)),
-											hasCustomCurrentColor && BDFDB.ReactUtils.createElement("button", {
-												type: "button",
-												className: "translator-color-chip translator-color-chip-remove",
-												title: compactText("删除当前自定义颜色", "Remove current custom color", "Удалить текущий пользовательский цвет"),
-												onClick: _ => resetTranslatedTextColor(),
-												children: "×"
-											}),
 											BDFDB.ReactUtils.createElement("button", {
 												type: "button",
 												className: "translator-color-chip translator-color-chip-add",
@@ -1616,14 +2758,30 @@ module.exports = (_ => {
 									colorState.showCustom && BDFDB.ReactUtils.createElement("div", {
 										className: "translator-color-custom-row",
 										children: [
-											BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TextInput, {
-												className: "translator-color-custom-input",
-												placeholder: "#7cc7ff",
-												value: colorState.customValue,
-												onChange: value => {
-													colorState.customValue = value;
-												}
-											}),
+											BDFDB.ReactUtils.createElement("input", {
+										type: "color",
+										className: "translator-native-color-input",
+										defaultValue: /^#[0-9a-f]{6}$/i.test(colorState.customValue || "") ? colorState.customValue : "#7cc7ff",
+										onInput: event => {
+											const nextColor = event && event.target && event.target.value || colorState.customValue;
+											colorState.customValue = nextColor;
+											const row = event && event.target && event.target.closest && event.target.closest(".translator-color-custom-row");
+											const textInput = row && row.querySelector && row.querySelector(".translator-color-custom-input");
+											if (textInput && textInput.value != nextColor) textInput.value = nextColor;
+										},
+										onChange: event => {
+											colorState.customValue = event && event.target && event.target.value || colorState.customValue;
+										}
+									}),
+									BDFDB.ReactUtils.createElement("input", {
+										type: "text",
+										className: "translator-color-custom-input",
+										placeholder: "#7cc7ff",
+										defaultValue: colorState.customValue,
+										onInput: event => {
+											colorState.customValue = event && event.target && event.target.value || "";
+										}
+									}),
 											createActionButton({
 												label: this.getCustomText("translated_text_color_save_button"),
 												look: BDFDB.LibraryComponents.Button.Looks.OUTLINED,
@@ -1746,6 +2904,7 @@ module.exports = (_ => {
 							className: BDFDB.disCN.marginbottom8,
 							children: [
 								infoText(this.getCustomText("source_filter_hint")),
+								!((this.settings.filters && this.settings.filters.autoTranslateSourceLanguages) || []).length && infoText(this.getCustomText("source_filter_empty_state")),
 								...((this.settings.filters && this.settings.filters.autoTranslateSourceLanguages) || []).map((languageId, index) => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex, {
 									className: BDFDB.disCN.marginbottom8,
 									align: BDFDB.LibraryComponents.Flex.Align.CENTER,
@@ -1812,6 +2971,7 @@ module.exports = (_ => {
 							className: BDFDB.disCN.marginbottom8,
 							children: [
 								infoText(this.getCustomText("received_source_filter_hint")),
+								!((this.settings.filters && this.settings.filters.receivedAutoTranslateSourceLanguages) || []).length && infoText(this.getCustomText("received_source_filter_empty_state")),
 								...((this.settings.filters && this.settings.filters.receivedAutoTranslateSourceLanguages) || []).map((languageId, index) => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Flex, {
 									className: BDFDB.disCN.marginbottom8,
 									align: BDFDB.LibraryComponents.Flex.Align.CENTER,
@@ -1873,121 +3033,51 @@ module.exports = (_ => {
 								})
 							]
 						});
-						const createReceivedAutoTranslateSettings = () => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.CollapseContainer, {
-							title: this.getCustomText("received_auto_translate_title"),
-							collapseStates: collapseStates,
-							children: [
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
-									title: this.getCustomText("received_auto_translate_scope_title"),
-									className: BDFDB.disCN.marginbottom8,
-									children: [
-										createSegmentedSelector({
-											className: "translator-scope-grid",
-											options: this.getReceivedAutoTranslateScopeOptions(),
-											value: this.getReceivedAutoTranslateScope(),
-											onChange: value => {
-												saveReceivedFilterSetting("receivedAutoTranslateScope", value == "loaded_messages" ? "loaded_messages" : "new_only");
-												this.resetAutoTranslationTracking();
-												this.clearDisplayedAutoTranslations();
-												this.clearAutoTranslationQueue();
-												this.scheduleTranslationRerender();
-												this.processAutoTranslationQueue();
-												refreshPanel();
-											}
-										})
-									]
-								}),
-								this.getReceivedAutoTranslateScope() == "loaded_messages" && BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
-									title: this.getCustomText("received_auto_translate_loaded_window_title"),
-									className: BDFDB.disCN.marginbottom8,
-									children: [
-										createSegmentedSelector({
-											className: "translator-window-grid",
-											options: this.getReceivedAutoTranslateLoadedTimeWindowOptions(),
-											value: this.getReceivedAutoTranslateLoadedTimeWindow(),
-											onChange: value => {
-												saveReceivedFilterSetting("receivedAutoTranslateLoadedTimeWindow", value);
-												this.resetAutoTranslationTracking();
-												this.clearDisplayedAutoTranslations();
-												this.clearAutoTranslationQueue();
-												this.scheduleTranslationRerender({batched: true});
-												refreshPanel();
-											}
-										})
-									]
-								}),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsSaveItem, {
-									type: "Switch",
-									plugin: this,
-									keys: ["filters", "skipMixedReceivedMessages"],
-									label: this.getCustomText("skip_mixed_received_label"),
-									value: this.settings.filters.skipMixedReceivedMessages,
-									onChange: value => {
-										saveReceivedFilterSetting("skipMixedReceivedMessages", value);
-									}
-								}),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsSaveItem, {
-									type: "Switch",
-									plugin: this,
-									keys: ["filters", "skipSameLanguageReceivedMessages"],
-									label: this.getCustomText("skip_same_language_received_label"),
-									value: this.settings.filters.skipSameLanguageReceivedMessages,
-									onChange: value => {
-										saveReceivedFilterSetting("skipSameLanguageReceivedMessages", value);
-									}
-								}),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsSaveItem, {
-									type: "Switch",
-									plugin: this,
-									keys: ["filters", "treatLanguageVariantsAsSame"],
-									label: this.getCustomText("treat_language_variants_label"),
-									value: this.settings.filters.treatLanguageVariantsAsSame,
-									onChange: value => {
-										saveReceivedFilterSetting("treatLanguageVariantsAsSame", value);
-									}
-								}),
-								BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsSaveItem, {
-									type: "Switch",
-									plugin: this,
-									keys: ["filters", "dropSimilarTranslations"],
-									label: this.getCustomText("drop_similar_translations_label"),
-									value: this.settings.filters.dropSimilarTranslations,
-									onChange: value => {
-										saveReceivedFilterSetting("dropSimilarTranslations", value);
-									}
-								}),
-								BDFDB.ReactUtils.createElement("div", {
-									className: "translator-settings-inline-grid",
-									children: [
-										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
-											title: this.getCustomText("minimum_auto_translate_length_title"),
-											className: BDFDB.disCN.marginbottom8,
-											children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TextInput, {
-												placeholder: "6",
-												value: String(this.settings.filters.minimumAutoTranslateLength != null ? this.settings.filters.minimumAutoTranslateLength : 6),
-												onChange: value => {
-													value = parseInt(value, 10);
-													saveReceivedFilterSetting("minimumAutoTranslateLength", isNaN(value) ? 6 : Math.max(1, Math.min(80, value)));
-												}
-											})
-										}),
-										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
-											title: this.getCustomText("translation_similarity_threshold_title"),
-											className: BDFDB.disCN.marginbottom8,
-											children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TextInput, {
-												placeholder: "0.90",
-												value: String(this.settings.filters.translationSimilarityThreshold != null ? this.settings.filters.translationSimilarityThreshold : 0.9),
-												onChange: value => {
-													value = parseFloat(value);
-													saveReceivedFilterSetting("translationSimilarityThreshold", isNaN(value) ? 0.9 : Math.max(0.5, Math.min(0.99, value)));
-												}
-											})
-										})
-									]
-								}),
-								createReceivedSourceLanguageFilter()
-							].filter(Boolean)
-						});
+						const createAutoTranslateDecisionSettings = () => {
+							const aiCapable = this.isAiAutoTranslateDecisionAvailable();
+							const currentMode = this.getAutoTranslateDecisionMode();
+							return BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormItem, {
+								title: this.getCustomText("auto_translate_decision_title"),
+								className: BDFDB.disCN.marginbottom8,
+								children: [
+									infoText(this.getCustomText("auto_translate_decision_hint")),
+									createSegmentedSelector({
+										className: "translator-decision-mode-grid",
+										value: currentMode,
+										options: [
+											{value: "basic", label: this.getCustomText("auto_translate_decision_basic")},
+											{value: "ai", label: aiCapable ? this.getCustomText("auto_translate_decision_ai") : this.getCustomText("auto_translate_decision_ai_disabled"), disabled: !aiCapable}
+										],
+										onChange: value => {
+											if (!this.settings.filters) this.settings.filters = {};
+											this.settings.filters.autoTranslateDecisionMode = value;
+											BDFDB.DataUtils.save(value, this, "filters", "autoTranslateDecisionMode");
+											this.SettingsUpdated = true;
+											refreshPanel();
+										}
+									}),
+									currentMode == "ai" && aiCapable && infoText(this.getCustomText("auto_translate_ai_prompt_hint")),
+									currentMode == "ai" && aiCapable && BDFDB.ReactUtils.createElement("textarea", {
+										className: "translator-ai-prompt-textarea",
+										defaultValue: this.getAiAutoTranslatePrompt(),
+										onInput: event => {
+											const value = event && event.target ? event.target.value : "";
+											if (!this.settings.filters) this.settings.filters = {};
+											this.settings.filters.aiAutoTranslatePrompt = value;
+											BDFDB.DataUtils.save(value, this, "filters", "aiAutoTranslatePrompt");
+											this.SettingsUpdated = true;
+										},
+										onChange: event => {
+											const value = event && event.target ? event.target.value : "";
+											if (!this.settings.filters) this.settings.filters = {};
+											this.settings.filters.aiAutoTranslatePrompt = value;
+											BDFDB.DataUtils.save(value, this, "filters", "aiAutoTranslatePrompt");
+											this.SettingsUpdated = true;
+										}
+									})
+								].filter(Boolean)
+							});
+						};
 						const createEngineOptions = keys => keys
 							.filter(key => translationEngines[key])
 							.map(key => ({value: key, label: this.getEngineLabel(key)}));
@@ -2111,23 +3201,15 @@ module.exports = (_ => {
 									}))
 							]
 						});
-						const createProtectionSection = () => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.CollapseContainer, {
-							title: this.getCustomText("protection_section_title"),
-							collapseStates: collapseStates,
-							children: [
-								createGeneralSwitch("protectQuotedText"),
-								createProtectedTermsForm(),
-								createWrapperPairsForm()
-							]
-						});
-						const createPrefixSection = () => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.CollapseContainer, {
-							title: this.getCustomText("prefix_section_title"),
-							collapseStates: collapseStates,
-							children: [
-								createDisablePrefixForm(),
-								createTranslatePrefixForm()
-							]
-						});
+						const createProtectionSection = () => [
+							createProtectedTermsForm(),
+							createSpaciousDivider(),
+							createWrapperPairsForm()
+						];
+						const createPrefixSection = () => [
+							createDisablePrefixForm(),
+							createTranslatePrefixForm()
+						];
 						settingsItems.push(BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.CollapseContainer, {
 							title: this.getCustomText("section_service_title"),
 							collapseStates: collapseStates,
@@ -2174,7 +3256,9 @@ module.exports = (_ => {
 								createDivider(),
 								createLanguageSelector(messageTypes.RECEIVED, languageTypes.INPUT, this.getCustomText("received_input_title")),
 								createLanguageSelector(messageTypes.RECEIVED, languageTypes.OUTPUT, this.getCustomText("received_output_title")),
-								createReceivedAutoTranslateSettings()
+								createReceivedSourceLanguageFilter(),
+								createSpaciousDivider(),
+								createAutoTranslateDecisionSettings()
 							]
 						}));
 						settingsItems.push(BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.CollapseContainer, {
@@ -2206,8 +3290,9 @@ module.exports = (_ => {
 							title: this.getCustomText("section_advanced_title"),
 							collapseStates: collapseStates,
 							children: [
-								createProtectionSection(),
-								createPrefixSection()
+								...createProtectionSection(),
+								createSpaciousDivider(),
+								...createPrefixSection()
 							]
 						}));
 						return BDFDB.ReactUtils.createElement("div", {
@@ -2219,6 +3304,7 @@ module.exports = (_ => {
 			}
 		
 			onSettingsClosed () {
+				if (historicalAutoTranslationRerenderPending) this.flushHistoricalAutoTranslationRerender(true);
 				if (this.SettingsUpdated) {
 					delete this.SettingsUpdated;
 					this.forceUpdateAll();
@@ -2261,7 +3347,8 @@ module.exports = (_ => {
 					received_input_title: "收到消息的源语言",
 					received_output_title: "收到消息的目标语言",
 					source_filter_title: "发送前只翻这些源语言",
-					source_filter_hint: "留空时，检测到什么语言就翻什么语言。添加后，只翻这里列出的源语言。",
+					source_filter_hint: "不添加任何语言时，不限制源语言；添加后，只翻译检测为这些语言的发送内容。",
+					source_filter_empty_state: "当前未限制发送消息源语言。",
 					source_filter_add: "+ 添加源语言",
 					section_display_title: "显示与交互",
 					section_display_hint: "这里控制按钮显示方式，以及原文和译文的展示规则。这里的剧透模式就是 Discord 原生 spoiler，也就是刮刮乐遮盖效果。",
@@ -2319,7 +3406,8 @@ module.exports = (_ => {
 					received_input_title: "Source language for received messages",
 					received_output_title: "Target language for received messages",
 					source_filter_title: "Outgoing source languages for auto-translate",
-					source_filter_hint: "Leave this empty to auto-translate every detected language. Add languages here to translate only those source languages into your configured target language.",
+					source_filter_hint: "If you do not add any languages here, outgoing source languages are not restricted. After adding languages, only detected outgoing content in those languages is translated.",
+					source_filter_empty_state: "Outgoing source languages are currently unrestricted.",
 					source_filter_add: "+ Add source language",
 					section_display_title: "Display and Interaction",
 					section_display_hint: "Control button visibility and how original text is shown together with translations. Spoiler mode here is the same Discord scratch-off effect.",
@@ -2352,13 +3440,15 @@ module.exports = (_ => {
 				};
 				Object.assign(texts, isChinese ? {
 					protected_terms_title: "保护词 / 保护短语",
-					protected_terms_hint: "填入不希望被翻译的固定名词或短语，例如 BUG team、ChatGPT Plus、DeepSeek V3。翻译前会先保护它们，翻译后再原样放回。",
+					protected_terms_hint: "填入不希望被翻译的固定名词或短语，例如项目名、模型名、品牌名或团队名。翻译前会先保护它们，翻译后再原样放回。",
 					protected_terms_placeholder: "新增保护词或短语",
-					channel_auto_translate_label: "当前频道自动翻译",
-					channel_auto_translate_on: "当前频道自动翻译已开启",
-					channel_auto_translate_off: "左键打开设置，右键一键开启当前频道自动翻译",
+					protected_terms_scope_sent: "保护我发送的消息",
+					protected_terms_scope_received: "保护收到的消息",
+					channel_auto_translate_label: "当前频道收到消息自动翻译",
+					channel_auto_translate_on: "当前频道收到消息自动翻译已开启",
+					channel_auto_translate_off: "在设置中单独开启当前频道收到消息自动翻译",
 					language_detector_title: "语言识别助手",
-					language_detector_hint: "把频道里的陌生文本粘贴到这里，插件会识别语言，并可一键填入上面的语言设置。",
+					language_detector_hint: "把频道里的陌生文本粘贴到这里，插件会识别语言，并可一键填入“您发送的消息中的输出语言”。",
 					language_detector_placeholder: "粘贴一小段待识别文本",
 					language_detector_button: "识别",
 					language_detector_button_loading: "识别中",
@@ -2369,13 +3459,15 @@ module.exports = (_ => {
 					language_detector_apply_sent: "填入发送消息输入语言"
 				} : {
 					protected_terms_title: "Protected Terms / Phrases",
-					protected_terms_hint: "Add names or phrases that must stay unchanged, such as BUG team, ChatGPT Plus, or DeepSeek V3. They will be protected before translation and restored afterward.",
+					protected_terms_hint: "Add names or phrases that must stay unchanged, such as project names, model names, brand names, or team names. They will be protected before translation and restored afterward.",
 					protected_terms_placeholder: "Add protected term or phrase",
-					channel_auto_translate_label: "Auto translate this channel",
-					channel_auto_translate_on: "Auto translate is enabled for this channel",
-					channel_auto_translate_off: "Left click for settings, right click to enable auto translate for this channel",
+					protected_terms_scope_sent: "Protect sent messages",
+					protected_terms_scope_received: "Protect received messages",
+					channel_auto_translate_label: "Incoming auto-translate for this channel",
+					channel_auto_translate_on: "Incoming auto-translate is enabled for this channel",
+					channel_auto_translate_off: "Enable incoming auto-translate separately in settings",
 					language_detector_title: "Language Detection Helper",
-					language_detector_hint: "Paste a short sample from the channel here. The plugin will detect the language and let you apply it to the rules above.",
+					language_detector_hint: "Paste a short sample here. The plugin will detect the language and apply it to the sent-message output language.",
 					language_detector_placeholder: "Paste text to detect",
 					language_detector_button: "Detect",
 					language_detector_button_loading: "Detecting",
@@ -2386,7 +3478,7 @@ module.exports = (_ => {
 					language_detector_apply_sent: "Use for sent-input language"
 				});
 				Object.assign(texts, isChinese ? {
-					language_detector_apply_sent_output: "填入发送消息目标语言",
+					language_detector_apply_sent_output: "填入发送消息输出语言",
 					context_detect_message_language: "识别这条消息的语言",
 					context_reply_in_detected_language: "以该语言回复",
 					detect_message_empty: "这条消息没有可识别的文本内容。",
@@ -2396,7 +3488,7 @@ module.exports = (_ => {
 					reply_language_hint: "保持当前频道翻译开启后，直接用你的语言回复即可。",
 					translated_label: "译文"
 				} : {
-					language_detector_apply_sent_output: "Use for sent-target language",
+					language_detector_apply_sent_output: "Use for sent output language",
 					context_detect_message_language: "Detect this message language",
 					context_reply_in_detected_language: "Reply in this language",
 					detect_message_empty: "This message has no text content to detect.",
@@ -2409,11 +3501,15 @@ module.exports = (_ => {
 				Object.assign(texts, isChinese ? {
 					wrapper_pairs_title: "自动保护包裹符规则",
 					wrapper_pairs_hint: "按“左包裹符|右包裹符”的格式添加规则，例如 \"|\"、“|” 、`|`、【|】、「|」。被这些符号包起来的内容会自动跳过翻译，并在译文里高亮显示。",
-					wrapper_pairs_placeholder: "例如 【|】 或 `|`"
+					wrapper_pairs_placeholder: "例如 【|】 或 `|`",
+					wrapper_pairs_scope_sent: "保护我发送的消息",
+					wrapper_pairs_scope_received: "保护收到的消息"
 				} : {
 					wrapper_pairs_title: "Protected Wrapper Rules",
 					wrapper_pairs_hint: "Add rules in the format left|right, for example \"|\", “|”, `|`, 【|】, or 「|」. Text wrapped by these symbols will be skipped during translation and highlighted in the translated result.",
-					wrapper_pairs_placeholder: "For example 【|】 or `|`"
+					wrapper_pairs_placeholder: "For example 【|】 or `|`",
+					wrapper_pairs_scope_sent: "Protect sent messages",
+					wrapper_pairs_scope_received: "Protect received messages"
 				});
 				Object.assign(texts, isChinese ? {
 					wrapper_pairs_title: "自动保护包裹符规则",
@@ -2432,9 +3528,17 @@ module.exports = (_ => {
 					received_auto_translate_preset_balanced: "平衡",
 					received_auto_translate_preset_strict: "严格",
 					received_auto_translate_preset_custom: "自定义",
-					received_source_filter_title: "收到消息允许自动翻译的源语言",
-					received_source_filter_hint: "留空表示不按源语言限制；填入后，只保留这些源语言的自动翻译结果。",
+					received_source_filter_title: "收到消息源语言过滤",
+					received_source_filter_hint: "不添加任何语言时，收到的任何源语言都可以自动翻译；添加后，只自动翻译检测为这些语言的收到消息。",
+					received_source_filter_empty_state: "当前未限制收到消息源语言。",
 					received_source_filter_add: "+ 添加收到消息源语言",
+						auto_translate_decision_title: "自动翻译判断方式",
+						auto_translate_decision_hint: "基础规则适用于所有服务商；AI 智能判断仅 AI 服务商可用，判断与翻译合并为一次请求。保护词会先本地保护，不参与改写。",
+						auto_translate_decision_basic: "基础规则",
+						auto_translate_decision_ai: "AI 智能判断",
+						auto_translate_decision_ai_disabled: "AI 智能判断（当前服务商不支持）",
+						auto_translate_ai_prompt_hint: "下面是默认 AI 判断提示词，可直接修改；{{INPUT_LANGUAGE}} / {{OUTPUT_LANGUAGE}} 会自动替换为当前语言设置，⟦0⟧ 这类占位符会在翻译后恢复。",
+						auto_translate_ai_prompt_reset: "恢复默认判断提示词",
 					skip_mixed_received_label: "跳过混合语言消息",
 					skip_same_language_received_label: "跳过与目标语言相同的消息",
 					treat_language_variants_label: "将地区/方言变体视为同一种语言",
@@ -2455,9 +3559,17 @@ module.exports = (_ => {
 					received_auto_translate_preset_balanced: "Balanced",
 					received_auto_translate_preset_strict: "Strict",
 					received_auto_translate_preset_custom: "Custom",
-					received_source_filter_title: "Allowed incoming source languages",
-					received_source_filter_hint: "Leave this empty to avoid source-language filtering. If filled, only those detected source languages keep their auto-translation result.",
+					received_source_filter_title: "Incoming source language filter",
+					received_source_filter_hint: "If you do not add any languages here, incoming source languages are not restricted. After adding languages, only detected incoming messages in those languages are auto-translated.",
+					received_source_filter_empty_state: "Incoming source languages are currently unrestricted.",
 					received_source_filter_add: "+ Add incoming source language",
+						auto_translate_decision_title: "Auto-translate decision mode",
+						auto_translate_decision_hint: "Basic rules work with every provider. AI smart decision is only available for AI providers and is merged into the translation request. Protected terms are protected locally first.",
+						auto_translate_decision_basic: "Basic rules",
+						auto_translate_decision_ai: "AI smart decision",
+						auto_translate_decision_ai_disabled: "AI smart decision (unsupported provider)",
+						auto_translate_ai_prompt_hint: "Default AI decision prompt. You can edit it directly. {{INPUT_LANGUAGE}} / {{OUTPUT_LANGUAGE}} are replaced with the current language settings, and placeholders like ⟦DTA0⟧ are restored after translation.",
+						auto_translate_ai_prompt_reset: "Restore default decision prompt",
 					skip_mixed_received_label: "Skip mixed-language messages",
 					skip_same_language_received_label: "Skip messages already in the target language",
 					treat_language_variants_label: "Treat regional variants as the same language",
@@ -2543,7 +3655,8 @@ module.exports = (_ => {
 					received_input_title: "Исходный язык входящих сообщений",
 					received_output_title: "Целевой язык входящих сообщений",
 					source_filter_title: "Автоперевод исходящих только с этих языков",
-					source_filter_hint: "Оставьте пустым, чтобы переводить любой определённый язык. Добавьте языки, чтобы переводить только их.",
+					source_filter_hint: "Если языки не добавлены, исходный язык исходящих сообщений не ограничен. После добавления будут переводиться только эти языки.",
+					source_filter_empty_state: "Исходные языки исходящих сообщений сейчас не ограничены.",
 					source_filter_add: "+ Добавить исходный язык",
 					received_auto_translate_title: "Автоперевод входящих сообщений",
 					received_auto_translate_hint: "Здесь задаются правила, какие входящие сообщения переводить автоматически.",
@@ -2553,8 +3666,16 @@ module.exports = (_ => {
 					received_auto_translate_preset_strict: "Строгий",
 					received_auto_translate_preset_custom: "Пользовательский",
 					received_source_filter_title: "Разрешённые исходные языки для входящих",
-					received_source_filter_hint: "Если список пустой, ограничение по языкам не применяется. Если заполнен, автоперевод сохраняется только для этих языков.",
+					received_source_filter_hint: "Если языки не добавлены, входящие сообщения на любом исходном языке могут переводиться автоматически. После добавления будут переводиться только эти языки.",
+					received_source_filter_empty_state: "Исходные языки входящих сообщений сейчас не ограничены.",
 					received_source_filter_add: "+ Добавить язык входящих",
+						auto_translate_decision_title: "Режим автоопределения перевода",
+						auto_translate_decision_hint: "Базовые правила работают со всеми сервисами. AI-режим доступен только для AI-провайдеров и объединяется с запросом перевода.",
+						auto_translate_decision_basic: "Базовые правила",
+						auto_translate_decision_ai: "AI-решение",
+						auto_translate_decision_ai_disabled: "AI-решение (не поддерживается)",
+						auto_translate_ai_prompt_hint: "Если AI вернёт перевод, он будет показан. Если вернёт __SKIP_TRANSLATION__, блок перевода не показывается.",
+						auto_translate_ai_prompt_reset: "Восстановить стандартную подсказку",
 					skip_mixed_received_label: "Пропускать смешанные сообщения",
 					skip_same_language_received_label: "Пропускать сообщения на том же языке, что и целевой",
 					treat_language_variants_label: "Считать региональные варианты одним языком",
@@ -2592,6 +3713,8 @@ module.exports = (_ => {
 					protected_terms_title: "Защищённые слова / фразы",
 					protected_terms_hint: "Добавьте имена или фразы, которые нельзя переводить.",
 					protected_terms_placeholder: "Добавить защищённый термин",
+					protected_terms_scope_sent: "Защищать исходящие сообщения",
+					protected_terms_scope_received: "Защищать входящие сообщения",
 					channel_auto_translate_label: "Автоперевод этого канала",
 					channel_auto_translate_on: "Автоперевод включён для этого канала",
 					channel_auto_translate_off: "ЛКМ: открыть настройки, ПКМ: включить автоперевод канала",
@@ -2617,6 +3740,8 @@ module.exports = (_ => {
 					wrapper_pairs_title: "Защищённые пары обрамления",
 					wrapper_pairs_hint: "Добавляйте правила в формате левая|правая часть, например \"|\", `|`, 【|】 или 「|」.",
 					wrapper_pairs_placeholder: "Например 【|】 или `|`",
+					wrapper_pairs_scope_sent: "Защищать исходящие сообщения",
+					wrapper_pairs_scope_received: "Защищать входящие сообщения",
 					plugin_language_title: "Язык интерфейса плагина",
 					plugin_language_hint: "Можно следовать языку Discord или зафиксировать язык интерфейса плагина отдельно.",
 					translated_text_color_title: "Цвет переведённого текста",
@@ -2632,17 +3757,26 @@ module.exports = (_ => {
 					section_display_message_title: texts.section_display_message_title || (isChinese ? "消息显示" : isRussian ? "Отображение сообщений" : "Message Display"),
 					section_display_ui_title: texts.section_display_ui_title || (isChinese ? "界面与按钮" : isRussian ? "Интерфейс и кнопки" : "Interface and Buttons"),
 					protection_section_title: texts.protection_section_title || (isChinese ? "保护规则" : isRussian ? "Правила защиты" : "Protection Rules"),
-					received_auto_translate_scope_title: texts.received_auto_translate_scope_title || (isChinese ? "自动翻译范围" : isRussian ? "Диапазон автоперевода" : "Auto-translate range"),
+					received_auto_translate_scope_title: texts.received_auto_translate_scope_title || (isChinese ? "自动翻译模式" : isRussian ? "Диапазон автоперевода" : "Auto-translate range"),
 					received_auto_translate_scope_hint: texts.received_auto_translate_scope_hint || (isChinese ? "只翻译新消息，或连当前已加载消息一起翻译。" : isRussian ? "Выберите: переводить только новые сообщения или также уже загруженные на экран." : "Translate only new messages, or include the messages already loaded on screen."),
-					received_auto_translate_scope_new_only: texts.received_auto_translate_scope_new_only || (isChinese ? "只翻译新消息（推荐）" : isRussian ? "Только новые сообщения (рекомендуется)" : "Only new messages (Recommended)"),
-					received_auto_translate_scope_loaded_messages: texts.received_auto_translate_scope_loaded_messages || (isChinese ? "翻译当前已加载消息" : isRussian ? "Переводить уже загруженные сообщения" : "Translate currently loaded messages"),
+					received_auto_translate_scope_new_only: texts.received_auto_translate_scope_new_only || (isChinese ? "只翻译新消息" : isRussian ? "Только новые сообщения (рекомендуется)" : "Only new messages (Recommended)"),
+					received_auto_translate_scope_loaded_messages: texts.received_auto_translate_scope_loaded_messages || (isChinese ? "当前已加载消息" : isRussian ? "Переводить уже загруженные сообщения" : "Translate currently loaded messages"),
 					received_auto_translate_loaded_window_title: texts.received_auto_translate_loaded_window_title || (isChinese ? "已加载消息的时间范围" : isRussian ? "Временной диапазон загруженных сообщений" : "Loaded message time range"),
 					received_auto_translate_loaded_window_hint: texts.received_auto_translate_loaded_window_hint || (isChinese ? "只处理这个时间范围内的已加载消息。" : isRussian ? "Переводить только загруженные сообщения в этом диапазоне времени." : "Only translate loaded messages inside this time range."),
 					received_auto_translate_loaded_window_15m: texts.received_auto_translate_loaded_window_15m || (isChinese ? "15分钟" : isRussian ? "15 мин" : "15 min"),
 					received_auto_translate_loaded_window_1h: texts.received_auto_translate_loaded_window_1h || (isChinese ? "1小时" : isRussian ? "1 час" : "1 hour"),
 					received_auto_translate_loaded_window_6h: texts.received_auto_translate_loaded_window_6h || (isChinese ? "6小时" : isRussian ? "6 часов" : "6 hours"),
 					received_auto_translate_loaded_window_24h: texts.received_auto_translate_loaded_window_24h || (isChinese ? "24小时" : isRussian ? "24 часа" : "24 hours"),
-					received_auto_translate_loaded_window_all: texts.received_auto_translate_loaded_window_all || (isChinese ? "全部已加载" : isRussian ? "Все загруженные" : "All loaded")
+					received_auto_translate_loaded_window_all: texts.received_auto_translate_loaded_window_all || (isChinese ? "全部已加载（高风险）" : isRussian ? "Все загруженные (риск)" : "All loaded (High risk)"),
+					received_auto_translate_scope_new_only_desc: texts.received_auto_translate_scope_new_only_desc || (isChinese ? "只处理开启后出现的新消息，滚动和历史记录最稳定。" : isRussian ? "Переводит только новые сообщения после включения; самый стабильный режим." : "Only translate messages that appear after enabling; safest for scrolling."),
+					received_auto_translate_scope_loaded_messages_desc: texts.received_auto_translate_scope_loaded_messages_desc || (isChinese ? "会回扫当前屏幕已加载消息，适合临时看历史，但会限制数量并在滚动时暂停。" : isRussian ? "Сканирует уже загруженные сообщения; лимитируется и ставится на паузу при прокрутке." : "Backfills currently loaded messages; capped and paused while scrolling."),
+					received_auto_translate_loaded_range_mode_title: texts.received_auto_translate_loaded_range_mode_title || (isChinese ? "已加载消息范围方式" : isRussian ? "Способ ограничения" : "Loaded message range mode"),
+					received_auto_translate_loaded_range_mode_count: texts.received_auto_translate_loaded_range_mode_count || (isChinese ? "按数量" : isRussian ? "По количеству" : "By count"),
+					received_auto_translate_loaded_range_mode_time: texts.received_auto_translate_loaded_range_mode_time || (isChinese ? "按时间" : isRussian ? "По времени" : "By time"),
+					received_auto_translate_loaded_warning: texts.received_auto_translate_loaded_warning || (isChinese ? "会翻译当前屏幕已加载的消息；每批按数量限制，向上滚动时可继续处理新加载的历史消息。" : isRussian ? "Чем длиннее диапазон, тем больше скачков высоты. Плагин ограничивает очередь, обновляет пакетами и ставит работу на паузу при прокрутке." : "Longer ranges can cause more height changes. The plugin caps the queue, rerenders in batches, and pauses while you scroll."),
+					received_auto_translate_loaded_limit_title: texts.received_auto_translate_loaded_limit_title || (isChinese ? "每批最多翻译已加载消息" : isRussian ? "Максимум уже загруженных сообщений" : "Max loaded messages per pass"),
+					received_auto_translate_loaded_limit_hint: texts.received_auto_translate_loaded_limit_hint || (isChinese ? "建议 25 或 50，最大 100。AI 服务商会优先按该数量批量请求，失败时自动拆包补翻。" : isRussian ? "Рекомендуется 25 или 50. Чем больше, тем выше риск скачков." : "25 or 50 is recommended; max 100. AI providers try this batch size first and split/fallback if needed."),
+					received_auto_translate_loaded_pause_scroll: texts.received_auto_translate_loaded_pause_scroll || (isChinese ? "拖动滚动条/阅读历史时暂停已加载消息翻译" : isRussian ? "Пауза перевода загруженных сообщений при прокрутке" : "Pause loaded-message translation while scrolling")
 				});
 				if (!texts.show_secret_label) texts.show_secret_label = isChinese ? "显示密钥" : isRussian ? "Показать ключ" : "Show secret";
 				if (!texts.hide_secret_label) texts.hide_secret_label = isChinese ? "隐藏密钥" : isRussian ? "Скрыть ключ" : "Hide secret";
@@ -2687,9 +3821,9 @@ module.exports = (_ => {
 					protectQuotedText: "Automatically protect and highlight wrapped content"
 				});
 				Object.assign(labels, isChinese ? {
-					showOriginalInReplyPreview: "别人引用这条消息时显示译文+原文"
+					showOriginalInReplyPreview: "别人引用这条消息时只显示译文"
 				} : {
-					showOriginalInReplyPreview: "Show translated text and original text in reply previews"
+					showOriginalInReplyPreview: "Show translated text only in reply previews"
 				});
 				Object.assign(labels, isChinese ? {
 					useSpoilerInSentOriginal: "发送附带原文时使用剧透/刮刮乐遮盖",
@@ -2734,13 +3868,19 @@ module.exports = (_ => {
 			}
 
 			getChannelTranslationToggleLabel () {
-				return this.getCustomText("channel_auto_translate_label");
+				if (this.isChineseUiLanguage()) return "\u5f53\u524d\u9891\u9053\u6536\u5230\u6d88\u606f\u81ea\u52a8\u7ffb\u8bd1";
+				return "Incoming auto-translate for this channel";
 			}
 
 			getTranslateButtonTooltipText (channelId) {
 				const enabled = this.isTranslationEnabled(channelId);
-				if (!enabled) return this.getCustomText("channel_auto_translate_off");
-				return `${this.getCustomText("channel_auto_translate_on")} | ${this.getTranslationTooltipText(this.getLanguageChoice(languageTypes.INPUT, messageTypes.RECEIVED, channelId), this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId))}`;
+				const isPerChat = this.settings.general.usePerChatTranslation;
+				if (!enabled) {
+					if (this.isChineseUiLanguage()) return isPerChat ? "左键打开设置，右键开启当前频道的翻译插件总开关" : "左键打开设置，右键开启全局翻译插件总开关";
+					return isPerChat ? "Left click for settings, right click to enable the translator master switch in this channel" : "Left click for settings, right click to enable the global translator master switch";
+				}
+				const statusText = this.isChineseUiLanguage() ? (isPerChat ? "当前频道翻译插件总开关已开启" : "全局翻译插件总开关已开启") : (isPerChat ? "Translator master switch is enabled in this channel" : "Global translator master switch is enabled");
+				return `${statusText} | ${this.getTranslationTooltipText(this.getLanguageChoice(languageTypes.INPUT, messageTypes.RECEIVED, channelId), this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId))}`;
 			}
 
 			getUiLanguageId () {
@@ -2767,15 +3907,6 @@ module.exports = (_ => {
 				];
 			}
 
-			getReceivedAutoTranslatePresetOptions () {
-				return [
-					{value: "loose", label: this.getCustomText("received_auto_translate_preset_loose")},
-					{value: "balanced", label: this.getCustomText("received_auto_translate_preset_balanced")},
-					{value: "strict", label: this.getCustomText("received_auto_translate_preset_strict")},
-					{value: "custom", label: this.getCustomText("received_auto_translate_preset_custom")}
-				];
-			}
-
 			getReceivedAutoTranslateScopeOptions () {
 				return [
 					{value: "new_only", label: this.getCustomText("received_auto_translate_scope_new_only")},
@@ -2793,61 +3924,17 @@ module.exports = (_ => {
 				];
 			}
 
-			getReceivedAutoTranslatePresetProfiles () {
-				return {
-					loose: {
-						title: this.getCustomText("received_auto_translate_profile_loose_title"),
-						description: this.getCustomText("received_auto_translate_profile_loose_desc"),
-						values: {
-							receivedAutoTranslateScope: "new_only",
-							receivedAutoTranslateLoadedTimeWindow: "24h",
-							skipMixedReceivedMessages: false,
-							skipSameLanguageReceivedMessages: false,
-							treatLanguageVariantsAsSame: true,
-							dropSimilarTranslations: false,
-							minimumAutoTranslateLength: 2,
-							translationSimilarityThreshold: 0.98
-						}
-					},
-					balanced: {
-						title: this.getCustomText("received_auto_translate_profile_balanced_title"),
-						description: this.getCustomText("received_auto_translate_profile_balanced_desc"),
-						values: {
-							receivedAutoTranslateScope: "new_only",
-							receivedAutoTranslateLoadedTimeWindow: "1h",
-							skipMixedReceivedMessages: true,
-							skipSameLanguageReceivedMessages: true,
-							treatLanguageVariantsAsSame: true,
-							dropSimilarTranslations: true,
-							minimumAutoTranslateLength: 6,
-							translationSimilarityThreshold: 0.9
-						}
-					},
-					strict: {
-						title: this.getCustomText("received_auto_translate_profile_strict_title"),
-						description: this.getCustomText("received_auto_translate_profile_strict_desc"),
-						values: {
-							receivedAutoTranslateScope: "new_only",
-							receivedAutoTranslateLoadedTimeWindow: "15m",
-							skipMixedReceivedMessages: true,
-							skipSameLanguageReceivedMessages: true,
-							treatLanguageVariantsAsSame: true,
-							dropSimilarTranslations: true,
-							minimumAutoTranslateLength: 12,
-							translationSimilarityThreshold: 0.82
-						}
-					},
-					custom: {
-						title: this.getCustomText("received_auto_translate_profile_custom_title"),
-						description: this.getCustomText("received_auto_translate_profile_custom_desc"),
-						values: null
-					}
-				};
+			getReceivedAutoTranslateLoadedRangeModeOptions () {
+				return [
+					{value: LOADED_AUTO_TRANSLATE_RANGE_MODES.COUNT, label: this.getCustomText("received_auto_translate_loaded_range_mode_count")},
+					{value: LOADED_AUTO_TRANSLATE_RANGE_MODES.TIME, label: this.getCustomText("received_auto_translate_loaded_range_mode_time")}
+				];
 			}
 
-			getReceivedAutoTranslatePresetProfile (preset = null) {
-				const profiles = this.getReceivedAutoTranslatePresetProfiles();
-				return profiles[preset || this.getReceivedAutoTranslatePreset()] || profiles.balanced;
+			normalizeLoadedAutoTranslateLimit (value) {
+				const parsedValue = parseInt(value, 10);
+				if (!isFinite(parsedValue)) return DEFAULT_LOADED_AUTO_TRANSLATE_LIMIT;
+				return Math.max(LOADED_AUTO_TRANSLATE_LIMIT_MIN, Math.min(LOADED_AUTO_TRANSLATE_LIMIT_MAX, parsedValue));
 			}
 
 			getTranslatedTextColorPresets () {
@@ -2865,6 +3952,8 @@ module.exports = (_ => {
 
 			getTranslatedTextColorPalette () {
 				const colors = this.getTranslatedTextColorPresets().slice();
+				const customColors = this.settings && this.settings.general && BDFDB.ArrayUtils.is(this.settings.general.customTranslatedTextColors) ? this.settings.general.customTranslatedTextColors : [];
+				for (const color of customColors) if (color && !colors.includes(color)) colors.unshift(color);
 				const currentColor = this.getTranslatedTextColor();
 				if (!colors.includes(currentColor)) colors.unshift(currentColor);
 				return colors;
@@ -3040,20 +4129,80 @@ module.exports = (_ => {
 				};
 			}
 
-			extractOriginalContentData (message) {
+			normalizeExtractedMessageText (value) {
+				if (value == null) return "";
+				if (typeof value == "string") return value;
+				if (typeof value == "number" || typeof value == "boolean") return String(value);
+				if (value && typeof value == "object") {
+					if (typeof value.text == "string") return value.text;
+					if (typeof value.content == "string") return value.content;
+					if (typeof value.raw == "string") return value.raw;
+				}
+				return "";
+			}
+
+			getReferencedPreviewContentCandidates (message) {
+				const candidates = [];
+				const addCandidate = value => {
+					value = this.normalizeExtractedMessageText(value).trim();
+					if (value && !candidates.includes(value)) candidates.push(value);
+				};
+				const referencedSources = [
+					message && message.referencedMessage,
+					message && message.referencedMessage && message.referencedMessage.message,
+					message && message.referenced_message,
+					message && message.messageReference && message.messageReference.message,
+					message && message.reference && message.reference.message
+				].filter(Boolean);
+				for (const source of referencedSources) {
+					addCandidate(source.content);
+					addCandidate(source.originalContent);
+					addCandidate(source.rawContent);
+				}
+				return candidates;
+			}
+
+			stripReferencedPreviewFromContent (message, content) {
+				content = this.normalizeExtractedMessageText(content);
+				if (!message || !content || !(message.referencedMessage || message.referenced_message || message.messageReference || message.reference)) return content;
+				const trimmedContent = content.trim();
+				if (!trimmedContent) return content;
+				const candidates = this.getReferencedPreviewContentCandidates(message);
+				if (!candidates.length) return content;
+				const normalize = value => this.normalizeComparisonText(value || "");
+				const lines = content.split(/\r?\n/);
+				for (const candidate of candidates) {
+					const normalizedCandidate = normalize(candidate);
+					if (!normalizedCandidate) continue;
+					if (normalize(trimmedContent) == normalizedCandidate) return content;
+					if (trimmedContent.startsWith(candidate)) {
+						let remainder = trimmedContent.slice(candidate.length).replace(/^\s+/, "");
+						if (remainder) return remainder;
+					}
+					const firstLine = (lines[0] || "").trim();
+					if (firstLine && (normalize(firstLine).includes(normalizedCandidate) || normalizedCandidate.includes(normalize(firstLine)))) {
+						const remainder = lines.slice(1).join("\n").trim();
+						if (remainder) return remainder;
+					}
+				}
+				return content;
+			}
+
+			extractOriginalContentData (message, options = {}) {
 				const storedOriginalContentData = message && message.id && oldMessages[message.id] && oldMessages[message.id].originalContentData;
 				if (storedOriginalContentData) return this.cloneOriginalContentData(storedOriginalContentData);
-				const messageContent = message && message.content || "";
+				let messageContent = this.normalizeExtractedMessageText(message && message.content || "");
+				if (options && options.ignoreReferencedPreview) messageContent = this.stripReferencedPreviewFromContent(message, messageContent);
 				const extractedParts = this.extractLegacyDisplayedTranslationParts(messageContent);
 				return this.cloneOriginalContentData({
 					content: extractedParts.originalContent || messageContent,
 					embeds: ((message && message.embeds) || []).map(embed => ({
-						description: embed.originalDescription || embed.rawDescription || "",
-						title: embed.originalTitle || embed.rawTitle || "",
-						footerText: embed.originalFooter ? embed.originalFooter.text : embed.footer ? embed.footer.text : "",
+						description: this.normalizeExtractedMessageText(embed.originalDescription || embed.rawDescription || embed.description || ""),
+						title: this.normalizeExtractedMessageText(embed.originalTitle || embed.rawTitle || embed.title || ""),
+						footerText: this.normalizeExtractedMessageText(embed.originalFooter ? embed.originalFooter.text : embed.footer ? embed.footer.text : ""),
 						fields: (embed.originalFields || embed.fields || []).map(field => ({
-							name: field.rawName || field.name || "",
-							value: field.rawValue || field.value || ""
+							name: this.normalizeExtractedMessageText(field.rawName || field.name || ""),
+							value: this.normalizeExtractedMessageText(field.rawValue || field.value || "")
 						}))
 					}))
 				});
@@ -3063,7 +4212,7 @@ module.exports = (_ => {
 				if (!element || typeof element != "object") return false;
 				if (element.key && String(element.key).indexOf("translator-") == 0) return true;
 				const className = element.props && element.props.className;
-				if (typeof className == "string" && className.indexOf("translator-") > -1) return true;
+				if (typeof className == "string" && className.toLowerCase().indexOf("translator") > -1) return true;
 				const nestedChildren = element.props && element.props.children;
 				if (!nestedChildren) return false;
 				if (Array.isArray(nestedChildren)) return nestedChildren.some(child => this.isTranslatorInjectedElement(child));
@@ -3116,8 +4265,24 @@ module.exports = (_ => {
 				return node;
 			}
 
-			getProtectedWrapperRules () {
+			isDiscordSpoilerWrapperRule (rule) {
+				const raw = (rule || "").trim();
+				if (!raw) return false;
+				if (/^\|{2,}$/.test(raw)) return true;
+				let splitIndex = raw.indexOf("|");
+				if (splitIndex < 1 || splitIndex >= raw.length - 1) return false;
+				let left = raw.slice(0, splitIndex);
+				let right = raw.slice(splitIndex + 1);
+				return /^\|+$/.test(left) && /^\|+$/.test(right);
+			}
+
+			getWrapperPairItemsForSettings () {
 				let wrapperPairs = BDFDB.ArrayUtils.is(this.settings.exceptions.wrapperPairs) ? this.settings.exceptions.wrapperPairs : [];
+				return wrapperPairs.filter(rule => !this.isDiscordSpoilerWrapperRule(rule));
+			}
+
+			getProtectedWrapperRules () {
+				let wrapperPairs = this.getWrapperPairItemsForSettings();
 				return [...new Set(wrapperPairs.map(rule => (rule || "").trim()).filter(Boolean))].map(rule => {
 					let splitIndex = rule.indexOf("|");
 					if (splitIndex < 1 || splitIndex >= rule.length - 1) return null;
@@ -3129,7 +4294,7 @@ module.exports = (_ => {
 			}
 
 			findNextProtectedWrapperSegment (text, fromIndex = 0) {
-				if (!this.settings.general.protectQuotedText || typeof text != "string" || !text) return null;
+				if (typeof text != "string" || !text) return null;
 				let bestMatch = null;
 				for (let rule of this.getProtectedWrapperRules()) {
 					let startIndex = text.indexOf(rule.left, fromIndex);
@@ -3151,7 +4316,7 @@ module.exports = (_ => {
 			}
 
 			buildProtectedWrapperFragments (text, keyPrefix = "0") {
-				if (!this.settings.general.protectQuotedText || typeof text != "string" || !text) return text;
+				if (typeof text != "string" || !text) return text;
 				let fragments = [];
 				let cursor = 0;
 				let wrapperIndex = 0;
@@ -3172,7 +4337,7 @@ module.exports = (_ => {
 			}
 
 			highlightProtectedWrappedTextInNode (node, keyPrefix = "0") {
-				if (!this.settings.general.protectQuotedText || node == null) return node;
+				if (node == null) return node;
 				if (typeof node == "string") return this.buildProtectedWrapperFragments(node, keyPrefix);
 				if (Array.isArray(node)) {
 					let nextNodes = [];
@@ -3208,16 +4373,19 @@ module.exports = (_ => {
 				return (originalContentData.embeds || []).some(embed => (embed.title || "").trim() || (embed.description || "").trim() || (embed.footerText || "").trim() || (embed.fields || []).some(field => (field.name || "").trim() || (field.value || "").trim()));
 			}
 
-			buildReceivedDisplayContent (translatedContent, originalContent) {
+			buildReceivedDisplayContent (translatedContent, originalContent, forceInlineOriginal = false) {
 				let content = (translatedContent || "").trim();
-				if (originalContent && this.settings.general.showOriginalMessage && !this.settings.general.showOriginalDirectly) content += this.formatOriginalTextForMessage(originalContent, this.shouldUseSpoilerInReceivedOriginal());
+				const shouldInlineOriginal = !!(originalContent && (forceInlineOriginal || this.settings.general.showOriginalMessage && !this.settings.general.showOriginalDirectly));
+				if (shouldInlineOriginal) content += this.formatOriginalTextForMessage(originalContent, this.shouldUseSpoilerInReceivedOriginal());
 				return content;
 			}
 
 			refreshTranslationDisplay (translation) {
 				if (!translation) return null;
 				translation = Object.assign(translation, this.normalizeStoredTranslationData(translation));
-				translation.content = this.buildReceivedDisplayContent(translation.translatedContent || translation.content, translation.originalContent);
+				const inlineOriginalBySetting = !!(translation.originalContent && this.settings.general.showOriginalMessage && !this.settings.general.showOriginalDirectly);
+				translation.content = this.buildReceivedDisplayContent(translation.translatedContent || translation.content, translation.originalContent, false);
+				translation.contentIncludesOriginal = inlineOriginalBySetting;
 				return translation;
 			}
 
@@ -3228,7 +4396,7 @@ module.exports = (_ => {
 					channelId: this.settings.general.usePerChatTranslation ? channelId : "global",
 					input: this.getLanguageChoice(languageTypes.INPUT, messageTypes.RECEIVED, channelId),
 					output: this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId),
-					protectQuotedText: !!this.settings.general.protectQuotedText,
+					wrapperPairsForReceived: this.getExceptionScopeSetting("wrapperPairsForReceived", true),
 					wrapperPairs: this.getProtectedWrapperRules().map(rule => rule.raw),
 					protectedTerms: this.getProtectedTermsList().map(term => term.toLowerCase()),
 					translator: this.settings.engines.translator,
@@ -3240,8 +4408,49 @@ module.exports = (_ => {
 
 			getCachedReceivedTranslation (message, channelId, originalContentData = null) {
 				if (!message || !translationCache[message.id]) return null;
-				const signature = this.createReceivedTranslationSignature(message, channelId, originalContentData);
-				return translationCache[message.id].signature == signature ? Object.assign({signature}, translationCache[message.id].translation) : null;
+				const sourceData = originalContentData || this.extractOriginalContentData(message);
+				const signature = this.createReceivedTranslationSignature(message, channelId, sourceData);
+				if (translationCache[message.id].signature != signature) return null;
+				if (translationCache[message.id].skipped) return null;
+				let cachedTranslation = Object.assign({signature, channelId}, translationCache[message.id].translation);
+				const beforeSerialized = JSON.stringify(cachedTranslation || {});
+				cachedTranslation = this.normalizeStoredTranslationData(cachedTranslation);
+				if (!cachedTranslation.originalContent && sourceData && sourceData.content) cachedTranslation.originalContent = String(sourceData.content);
+				if (!cachedTranslation.translatedContent && cachedTranslation.content) cachedTranslation.translatedContent = this.extractLegacyDisplayedTranslationParts(cachedTranslation.content).translatedContent || cachedTranslation.content;
+				if (!cachedTranslation.translatedContent) return null;
+				if ((sourceData && sourceData.content || "").trim() && !String(cachedTranslation.originalContent || "").trim()) return null;
+				cachedTranslation = this.refreshTranslationDisplay(cachedTranslation);
+				if (this.isTranslationResultTooSimilar(cachedTranslation)) {
+					delete translationCache[message.id];
+					this.scheduleTranslationCacheSave();
+					return null;
+				}
+				// Re-check old cached auto-translations against the current same-language and
+				// auto-translation guards so stale rewritten target-language results do not return.
+				if (this.shouldSkipReceivedTranslationBeforeRequest(sourceData, channelId) || !this.shouldKeepAutoTranslatedResult(cachedTranslation, channelId)) {
+					delete translationCache[message.id];
+					this.scheduleTranslationCacheSave();
+					return null;
+				}
+				// Upgrade legacy cache entries in-place when the live Discord message still provides the original content.
+				// This prevents old cached translations from coming back as plain text without the original block.
+				if (JSON.stringify(cachedTranslation || {}) != beforeSerialized) {
+					translationCache[message.id].translation = Object.assign({}, cachedTranslation);
+					translationCache[message.id].signature = signature;
+					translationCache[message.id].cachedAt = translationCache[message.id].cachedAt || Date.now();
+					this.scheduleTranslationCacheSave();
+				}
+				return cachedTranslation;
+			}
+
+			getCachedReceivedSkipDecision (message, channelId, originalContentData = null) {
+				if (!message || !translationCache[message.id]) return null;
+				const sourceData = originalContentData || this.extractOriginalContentData(message);
+				const signature = this.createReceivedTranslationSignature(message, channelId, sourceData);
+				if (translationCache[message.id].signature != signature) return null;
+				const skipped = translationCache[message.id].skipped;
+				if (!skipped || !skipped.reason) return null;
+				return Object.assign({signature, channelId}, skipped);
 			}
 
 			scheduleTranslationCacheSave () {
@@ -3268,6 +4477,30 @@ module.exports = (_ => {
 				this.scheduleTranslationCacheSave();
 			}
 
+			shouldPersistReceivedSkipDecision (reason) {
+				return ["symbol_only", "link_only", "same_language", "too_similar", "ai_skip_signal", "source_filter"].includes(reason);
+			}
+
+			persistReceivedSkipDecision (messageId, signature, reason, preview = "") {
+				if (!messageId || !signature || !reason || !this.shouldPersistReceivedSkipDecision(reason)) return;
+				translationCache[messageId] = {
+					signature,
+					cachedAt: Date.now(),
+					skipped: {
+						reason,
+						preview: this.getLoadedAutoTranslationPreviewText(preview)
+					}
+				};
+				const cacheKeys = Object.keys(translationCache);
+				if (cacheKeys.length > MAX_TRANSLATION_CACHE_ENTRIES) {
+					cacheKeys
+						.sort((keyA, keyB) => (translationCache[keyA].cachedAt || 0) - (translationCache[keyB].cachedAt || 0))
+						.slice(0, cacheKeys.length - MAX_TRANSLATION_CACHE_ENTRIES)
+						.forEach(key => delete translationCache[key]);
+				}
+				this.scheduleTranslationCacheSave();
+			}
+
 			clearCachedTranslation (messageId) {
 				if (!messageId || !translationCache[messageId]) return;
 				delete translationCache[messageId];
@@ -3280,7 +4513,7 @@ module.exports = (_ => {
 					channelId: this.settings.general.usePerChatTranslation ? channelId : "global",
 					input: this.getLanguageChoice(languageTypes.INPUT, messageTypes.RECEIVED, channelId),
 					output: this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId),
-					protectQuotedText: !!this.settings.general.protectQuotedText,
+					wrapperPairsForReceived: this.getExceptionScopeSetting("wrapperPairsForReceived", true),
 					wrapperPairs: this.getProtectedWrapperRules().map(rule => rule.raw),
 					protectedTerms: this.getProtectedTermsList().map(term => term.toLowerCase()),
 					translator: this.settings.engines.translator,
@@ -3310,6 +4543,7 @@ module.exports = (_ => {
 				return {
 					signature: this.createReplyPreviewSignature(message, channelId, originalContent),
 					channelId,
+					auto: !!translation.auto,
 					translatedContent,
 					originalContent,
 					input: translation.input,
@@ -3320,10 +4554,9 @@ module.exports = (_ => {
 			getReplyPreviewDisplayContent (translation) {
 				if (!translation) return "";
 				translation = this.normalizeStoredTranslationData(translation);
-				const translatedContent = (translation.translatedContent || translation.content || "").trim();
-				if (!this.settings.general.showOriginalInReplyPreview) return translatedContent || (translation.originalContent || "");
 				const originalContent = (translation.originalContent || "").trim();
-				return translatedContent && originalContent ? `${translatedContent}\n${originalContent}` : (translatedContent || originalContent);
+				const translatedContent = (translation.translatedContent || translation.content || "").trim();
+				return this.settings.general.showOriginalInReplyPreview ? (translatedContent || originalContent) : originalContent;
 			}
 
 			stripReplyPreviewOriginalSuffix (content) {
@@ -3337,10 +4570,43 @@ module.exports = (_ => {
 				return content;
 			}
 
+			getStableReplyPreviewOriginalContent (message) {
+				if (!message) return "";
+				const currentContent = (message.content || "").trim();
+				const storedTranslations = [replyPreviewTranslations[message.id], translatedMessages[message.id]].filter(Boolean);
+				for (const storedTranslation of storedTranslations) {
+					const normalizedTranslation = this.normalizeStoredTranslationData(storedTranslation);
+					const originalContent = (normalizedTranslation.originalContent || "").trim();
+					const translatedContent = (normalizedTranslation.translatedContent || normalizedTranslation.content || "").trim();
+					const displayContent = this.getReplyPreviewDisplayContent(normalizedTranslation).trim();
+					if (!originalContent) continue;
+					if (!currentContent || currentContent == originalContent || currentContent == translatedContent || currentContent == displayContent || currentContent == this.stripReplyPreviewOriginalSuffix(displayContent)) return originalContent;
+				}
+				return currentContent;
+			}
+
+			getStableReplyPreviewMessage (message) {
+				if (!message) return message;
+				const stableMessage = new BDFDB.DiscordObjects.Message(message);
+				stableMessage.content = this.getStableReplyPreviewOriginalContent(message);
+				return stableMessage;
+			}
+
 			getReplyPreviewFallbackContent (message) {
 				if (!message) return "";
-				if (this.settings.general.showOriginalInReplyPreview) return (message.content || "").trim();
 				return this.stripReplyPreviewOriginalSuffix(message.content || "");
+			}
+			getReplyPreviewDisplayContentForMessage (message, channelId = null) {
+				if (!message) return "";
+				const originalContent = this.getStableReplyPreviewOriginalContent(message) || (message.content || "").trim();
+				if (!this.settings.general.showOriginalInReplyPreview) return this.stripReplyPreviewOriginalSuffix(originalContent || "");
+				const storedTranslation = translatedMessages[message.id] || replyPreviewTranslations[message.id];
+				if (storedTranslation && this.shouldDisplayStoredTranslation(storedTranslation, channelId || this.getStoredTranslationChannelId(message.id))) {
+					const normalizedTranslation = this.normalizeStoredTranslationData(storedTranslation);
+					const translatedContent = (normalizedTranslation.translatedContent || normalizedTranslation.content || "").trim();
+					return translatedContent || originalContent;
+				}
+				return originalContent;
 			}
 
 			tagReplyPreviewRenderNode (node) {
@@ -3374,9 +4640,12 @@ module.exports = (_ => {
 				return BDFDB.ReactUtils.createElement(node.type, Object.assign({}, props, {key: node.key, ref: node.ref}));
 			}
 
-			queueReplyPreviewTranslation (message, channelId) {
+			queueReplyPreviewTranslation (message, channelId, contextOptions = {}) {
 				if (!message || !message.id || !channelId || queuedReplyPreviewTranslations[message.id]) return;
-				if (!this.isTranslationEnabled(channelId) || this.isOwnMessage(message)) return;
+				const baseMessage = contextOptions.baseMessage || null;
+				if (baseMessage && !this.shouldAutoTranslateReplyPreview(baseMessage, message, channelId)) return;
+				if (suppressedAutoTranslations[message.id]) return;
+				if (!this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId) || this.isOwnMessage(message)) return;
 				const originalContent = (message.content || "").trim();
 				if (!originalContent) return;
 				const signature = this.createReplyPreviewSignature(message, channelId, originalContent);
@@ -3391,11 +4660,13 @@ module.exports = (_ => {
 				queuedReplyPreviewTranslations[message.id] = channelId;
 				this.translateText(originalContent, messageTypes.RECEIVED, (translation, input, output) => {
 					delete queuedReplyPreviewTranslations[message.id];
-					if (!this.isTranslationEnabled(channelId)) return;
+					if (baseMessage && !this.shouldAutoTranslateReplyPreview(baseMessage, message, channelId)) return;
+					if (!this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId)) return;
 					if (translation) {
 						replyPreviewTranslations[message.id] = {
 							signature,
 							channelId,
+							auto: true,
 							translatedContent: (translation || "").trim(),
 							originalContent,
 							input,
@@ -3412,8 +4683,35 @@ module.exports = (_ => {
 			}
 
 			resetAutoTranslationTracking (channelId = null) {
-				if (channelId) delete autoTranslationChannelStates[channelId];
-				else autoTranslationChannelStates = {};
+				if (channelId) {
+					delete autoTranslationChannelStates[channelId];
+					delete loadedAutoTranslationPassCounts[channelId];
+					delete loadedAutoTranslationPassRequestCounts[channelId];
+					delete loadedAutoTranslationBatchNumbers[channelId];
+					delete loadedAutoTranslationPassScrollStamps[channelId];
+					for (const messageId of Object.keys(loadedAutoTranslationAttemptedMessages)) if (loadedAutoTranslationAttemptedMessages[messageId] == channelId) delete loadedAutoTranslationAttemptedMessages[messageId];
+					if (historicalAutoTranslationBatchChannelId == channelId) {
+						historicalAutoTranslationBatchActive = false;
+						historicalAutoTranslationBatchProcessedCount = 0;
+						historicalAutoTranslationBatchMessageIds = {};
+						historicalAutoTranslationBatchChannelId = null;
+						historicalAutoTranslationBatchTotal = 0;
+					}
+				}
+				else {
+					autoTranslationChannelStates = {};
+					loadedAutoTranslationPassCounts = {};
+					loadedAutoTranslationPassRequestCounts = {};
+					loadedAutoTranslationBatchNumbers = {};
+					loadedAutoTranslationPassScrollStamps = {};
+					loadedAutoTranslationAttemptedMessages = {};
+					historicalAutoTranslationBatchActive = false;
+					historicalAutoTranslationBatchProcessedCount = 0;
+					historicalAutoTranslationBatchMessageIds = {};
+					historicalAutoTranslationBatchChannelId = null;
+					historicalAutoTranslationBatchTotal = 0;
+				}
+				this.clearAutoTranslationEligibleReplyPreviewMessages(channelId);
 				if (!channelId || lastAutoTranslationChannelId == channelId) lastAutoTranslationChannelId = null;
 			}
 
@@ -3432,6 +4730,12 @@ module.exports = (_ => {
 				const channelState = this.getAutoTranslationChannelState(channelId);
 				channelState.initialized = false;
 				channelState.boundaryMessageId = null;
+				loadedAutoTranslationPassCounts[channelId] = 0;
+				loadedAutoTranslationPassRequestCounts[channelId] = 0;
+				loadedAutoTranslationBatchNumbers[channelId] = 0;
+				loadedAutoTranslationPassScrollStamps[channelId] = lastAutoTranslationUserScrollTime || 0;
+				for (const messageId of Object.keys(loadedAutoTranslationAttemptedMessages)) if (loadedAutoTranslationAttemptedMessages[messageId] == channelId) delete loadedAutoTranslationAttemptedMessages[messageId];
+				this.clearAutoTranslationEligibleReplyPreviewMessages(channelId);
 				if (this.getReceivedAutoTranslateScope() == "new_only") this.clearDisplayedAutoTranslations(channelId);
 			}
 
@@ -3464,36 +4768,626 @@ module.exports = (_ => {
 				return this.compareMessageIds(messageId, referenceMessageId) > 0;
 			}
 
+			clearAutoTranslationEligibleReplyPreviewMessages (channelId = null) {
+				if (!channelId) autoTranslationEligibleReplyPreviewMessages = {};
+				else delete autoTranslationEligibleReplyPreviewMessages[channelId];
+			}
+
+			markAutoTranslationEligibleReplyPreviewMessage (channelId, messageId) {
+				if (!channelId || !messageId) return;
+				if (!autoTranslationEligibleReplyPreviewMessages[channelId]) autoTranslationEligibleReplyPreviewMessages[channelId] = {};
+				autoTranslationEligibleReplyPreviewMessages[channelId][messageId] = true;
+			}
+
+			isAutoTranslationEligibleReplyPreviewMessage (channelId, messageId) {
+				return !!(channelId && messageId && autoTranslationEligibleReplyPreviewMessages[channelId] && autoTranslationEligibleReplyPreviewMessages[channelId][messageId]);
+			}
+
+			cleanupReplyPreviewRenderMarks () {
+				replyPreviewRenderMessageIds = {};
+			}
+
+			markReplyPreviewRenderMessage (message) {
+				if (message && typeof message == "object") {
+					try {message.__DiscordAITranslatorReplyPreview = true;}
+					catch (err) {}
+				}
+			}
+
+			isRenderingReplyPreviewMessage (message) {
+				return !!(message && typeof message == "object" && message.__DiscordAITranslatorReplyPreview);
+			}
+
+			clearReplyPreviewRenderMessage (message) {
+				if (message && typeof message == "object") {
+					try {delete message.__DiscordAITranslatorReplyPreview;}
+					catch (err) {}
+				}
+			}
+
+			pauseHistoricalAutoTranslationForNavigation (duration = 1800) {
+				const now = Date.now();
+				lastAutoTranslationUserScrollTime = now;
+				historicalAutoTranslationPausedUntil = Math.max(historicalAutoTranslationPausedUntil || 0, now + duration);
+				this.scheduleAutoTranslationQueueRetry();
+			}
+
+			wrapReplyPreviewJumpPause (node) {
+				if (node == null) return node;
+				if (BDFDB.ArrayUtils.is(node)) return node.map(child => this.wrapReplyPreviewJumpPause(child));
+				const isValidElement = BDFDB.ReactUtils && typeof BDFDB.ReactUtils.isValidElement == "function" ? BDFDB.ReactUtils.isValidElement(node) : !!(node && typeof node == "object" && node.props);
+				if (!isValidElement || !node.props) return node;
+				const props = Object.assign({}, node.props);
+				const oldMouseDownCapture = props.onMouseDownCapture;
+				const oldClickCapture = props.onClickCapture;
+				const pause = event => {
+					this.pauseHistoricalAutoTranslationForNavigation(1800);
+				};
+				props.onMouseDownCapture = event => {
+					pause(event);
+					if (typeof oldMouseDownCapture == "function") oldMouseDownCapture(event);
+				};
+				props.onClickCapture = event => {
+					pause(event);
+					if (typeof oldClickCapture == "function") oldClickCapture(event);
+				};
+				return BDFDB.ReactUtils.createElement(node.type, Object.assign({}, props, {key: node.key, ref: node.ref}));
+			}
+
+			stripTranslatorStylingFromReplyPreviewNode (node) {
+				if (node == null) return node;
+				if (BDFDB.ArrayUtils.is(node)) return node.map(child => this.stripTranslatorStylingFromReplyPreviewNode(child)).filter(Boolean);
+				const isValidElement = BDFDB.ReactUtils && typeof BDFDB.ReactUtils.isValidElement == "function" ? BDFDB.ReactUtils.isValidElement(node) : !!(node && typeof node == "object" && node.props);
+				if (!isValidElement || !node.props) return node;
+				const props = Object.assign({}, node.props);
+				if (typeof props.className == "string") props.className = props.className
+					.split(/\s+/)
+					.filter(className => className && className.toLowerCase().indexOf("translator") == -1)
+					.join(" ");
+				if (props.style) {
+					props.style = Object.assign({}, props.style);
+					delete props.style["--translator-accent-color"];
+					delete props.style["--translator-text-color"];
+					delete props.style.color;
+					delete props.style.background;
+					delete props.style.backgroundColor;
+					delete props.style.borderLeft;
+				}
+				if (props.children != null) {
+					const children = BDFDB.ArrayUtils.is(props.children) ? props.children : [props.children];
+					props.children = children
+						.filter(child => !this.isTranslatorInjectedElement(child))
+						.map(child => this.stripTranslatorStylingFromReplyPreviewNode(child));
+				}
+				return BDFDB.ReactUtils.createElement(node.type, Object.assign({}, props, {key: node.key, ref: node.ref}));
+			}
+
+			shouldAutoTranslateReplyPreview (baseMessage, referencedMessage, channelId) {
+				if (!this.settings.general.showOriginalInReplyPreview) return false;
+				if (!channelId || !baseMessage || !baseMessage.id || !referencedMessage || !referencedMessage.id) return false;
+				if (!this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId)) return false;
+				if (this.isOwnMessage(baseMessage) || this.isOwnMessage(referencedMessage)) return false;
+				if (suppressedAutoTranslations[referencedMessage.id]) return false;
+				if (this.getReceivedAutoTranslateScope() == "loaded_messages") return this.isMessageWithinLoadedRange(baseMessage);
+				return this.isAutoTranslationEligibleReplyPreviewMessage(channelId, baseMessage.id);
+			}
+
+			getMessagesScroller () {
+				if (typeof document == "undefined") return null;
+				return document.querySelector(BDFDB.dotCN.messagesscroller);
+			}
+
+			extractMessageIdFromElement (element) {
+				if (!element) return null;
+				const values = [
+					element.getAttribute && element.getAttribute("data-list-item-id"),
+					element.getAttribute && element.getAttribute("aria-labelledby"),
+					element.id
+				].filter(Boolean);
+				for (const value of values) {
+					const match = String(value).match(/(\d{15,25})(?!.*\d)/);
+					if (match) return match[1];
+				}
+				return null;
+			}
+
+			findMessageElementById (messageId) {
+				if (!messageId || typeof document == "undefined") return null;
+				const escapedId = typeof CSS != "undefined" && CSS.escape ? CSS.escape(String(messageId)) : String(messageId).replace(/(["\\])/g, "\\$1");
+				const selectors = [
+					`[id="chat-messages-${escapedId}"]`,
+					`[id$="-${escapedId}"]`,
+					`[data-list-item-id$="-${escapedId}"]`,
+					`[data-list-item-id*="${escapedId}"]`,
+					`[aria-labelledby*="${escapedId}"]`
+				];
+				for (const selector of selectors) {
+					try {
+						const element = document.querySelector(selector);
+						if (element) return element.closest && element.closest('[id^="chat-messages-"], [data-list-item-id*="chat-messages"]') || element;
+					}
+					catch (err) {}
+				}
+				return null;
+			}
+
+			findVisibleMessageAnchorElement (messagesScroller = null) {
+				messagesScroller = messagesScroller || this.getMessagesScroller();
+				if (!messagesScroller || typeof document == "undefined") return null;
+				const scrollerRect = messagesScroller.getBoundingClientRect();
+				let candidates = [];
+				try {
+					candidates = Array.from(messagesScroller.querySelectorAll('[id^="chat-messages-"], [data-list-item-id*="chat-messages"]'));
+				}
+				catch (err) {candidates = [];}
+				const seen = new Set();
+				for (const element of candidates) {
+					if (!element || seen.has(element)) continue;
+					seen.add(element);
+					const messageId = this.extractMessageIdFromElement(element);
+					if (!messageId) continue;
+					const rect = element.getBoundingClientRect();
+					if (!rect || rect.height <= 0) continue;
+					if (rect.bottom <= scrollerRect.top + 8 || rect.top >= scrollerRect.bottom - 8) continue;
+					return {messageId, element};
+				}
+				return null;
+			}
+
+			captureMessageAnchorState (messageId = null) {
+				const messagesScroller = this.getMessagesScroller();
+				let element = messageId ? this.findMessageElementById(messageId) : null;
+				if (!element) {
+					const visibleAnchor = this.findVisibleMessageAnchorElement(messagesScroller);
+					if (visibleAnchor) {
+						messageId = visibleAnchor.messageId;
+						element = visibleAnchor.element;
+					}
+				}
+				if (!messagesScroller || !element || !messageId) return null;
+				const elementRect = element.getBoundingClientRect();
+				const scrollerRect = messagesScroller.getBoundingClientRect();
+				return {
+					messageId,
+					scrollTop: messagesScroller.scrollTop,
+					elementTop: elementRect.top,
+					relativeTop: elementRect.top - scrollerRect.top,
+					expiresAt: Date.now() + MANUAL_TRANSLATION_SCROLL_LOCK_MS
+				};
+			}
+
+			restoreMessageAnchorState (anchorState) {
+				if (!anchorState) return;
+				const restore = () => {
+					const messagesScroller = this.getMessagesScroller();
+					const element = this.findMessageElementById(anchorState.messageId);
+					if (!messagesScroller || !element) return;
+					const scrollerRect = messagesScroller.getBoundingClientRect();
+					const elementRect = element.getBoundingClientRect();
+					const desiredTop = scrollerRect.top + (typeof anchorState.relativeTop == "number" ? anchorState.relativeTop : elementRect.top - scrollerRect.top);
+					const delta = elementRect.top - desiredTop;
+					if (Math.abs(delta) < 1) return;
+					const maxScrollTop = Math.max(0, messagesScroller.scrollHeight - messagesScroller.clientHeight);
+					messagesScroller.scrollTop = Math.max(0, Math.min(messagesScroller.scrollTop + delta, maxScrollTop));
+				};
+				requestAnimationFrame(() => requestAnimationFrame(restore));
+				setTimeout(restore, 60);
+				setTimeout(restore, 180);
+				setTimeout(restore, 420);
+				setTimeout(restore, 900);
+			}
+
+			lockManualTranslationScroll (messageId) {
+				const anchorState = this.captureMessageAnchorState(messageId);
+				if (!anchorState) return;
+				manualTranslationScrollAnchor = anchorState;
+				if (manualTranslationScrollLockTimer) clearTimeout(manualTranslationScrollLockTimer);
+				manualTranslationScrollLockTimer = setTimeout(_ => {
+					manualTranslationScrollLockTimer = null;
+					manualTranslationScrollAnchor = null;
+				}, MANUAL_TRANSLATION_SCROLL_LOCK_MS);
+			}
+
+			getActiveManualTranslationScrollAnchor () {
+				if (!manualTranslationScrollAnchor) return null;
+				if (Date.now() > manualTranslationScrollAnchor.expiresAt) {
+					manualTranslationScrollAnchor = null;
+					return null;
+				}
+				return manualTranslationScrollAnchor;
+			}
+
 			captureMessageScrollerState () {
-				const messagesScroller = document.querySelector(BDFDB.dotCN.messagesscroller);
+				const messagesScroller = this.getMessagesScroller();
 				if (!messagesScroller) return null;
 				const maxScrollTop = Math.max(0, messagesScroller.scrollHeight - messagesScroller.clientHeight);
 				const distanceToBottom = Math.max(0, maxScrollTop - messagesScroller.scrollTop);
+				const keepBottom = distanceToBottom <= AUTO_TRANSLATION_BOTTOM_LOCK_THRESHOLD;
 				return {
 					scrollTop: messagesScroller.scrollTop,
-					keepBottom: distanceToBottom <= AUTO_TRANSLATION_BOTTOM_LOCK_THRESHOLD
+					keepBottom,
+					anchor: keepBottom ? null : this.captureMessageAnchorState()
 				};
 			}
 
 			restoreMessageScrollerState (scrollerState) {
 				if (!scrollerState) return;
-				requestAnimationFrame(() => requestAnimationFrame(() => {
-					const messagesScroller = document.querySelector(BDFDB.dotCN.messagesscroller);
+				const restore = () => {
+					const messagesScroller = this.getMessagesScroller();
 					if (!messagesScroller) return;
-					if (scrollerState.keepBottom) return messagesScroller.scrollTo({top: messagesScroller.scrollHeight});
+					if (scrollerState.keepBottom) {
+						messagesScroller.scrollTop = messagesScroller.scrollHeight;
+						return;
+					}
+					if (scrollerState.anchor) {
+						this.restoreMessageAnchorState(scrollerState.anchor);
+						return;
+					}
 					const maxScrollTop = Math.max(0, messagesScroller.scrollHeight - messagesScroller.clientHeight);
-					messagesScroller.scrollTo({top: Math.max(0, Math.min(scrollerState.scrollTop, maxScrollTop))});
-				}));
+					messagesScroller.scrollTop = Math.max(0, Math.min(scrollerState.scrollTop, maxScrollTop));
+				};
+				requestAnimationFrame(() => requestAnimationFrame(restore));
+				setTimeout(restore, 80);
+				setTimeout(restore, 240);
+				setTimeout(restore, 600);
 			}
 
 			rerenderMessagesWithScrollPreserved () {
-				const scrollerState = this.captureMessageScrollerState();
+				const manualAnchor = this.getActiveManualTranslationScrollAnchor();
+				const scrollerState = manualAnchor ? null : this.captureMessageScrollerState();
 				BDFDB.MessageUtils.rerenderAll(true);
-				this.restoreMessageScrollerState(scrollerState);
+				if (manualAnchor) this.restoreMessageAnchorState(manualAnchor);
+				else this.restoreMessageScrollerState(scrollerState);
+			}
+
+			getLoadedAutoTranslationStatusText (status) {
+				const total = Math.max(0, status && status.total || 0);
+				const processed = Math.max(0, Math.min(total || 0, status && status.processed || 0));
+				const displayed = Math.max(0, Math.min(total || 0, status && status.displayed || 0));
+				const skipped = Math.max(0, Math.min(total || 0, status && status.skipped || 0));
+				const aiDropped = Math.max(0, Math.min(total || 0, status && status.aiDropped || 0));
+				const batch = Math.max(1, status && status.batch || 1);
+				const aiDroppedSubset = Math.min(skipped || aiDropped, aiDropped);
+				const extraText = `${skipped ? (this.isChineseUiLanguage() ? `\uff0c\u8df3\u8fc7 ${skipped}` : `, skipped ${skipped}`) : ""}${aiDroppedSubset ? (this.isChineseUiLanguage() ? `\uff08\u5176\u4e2d AI\u4e22\u5f03 ${aiDroppedSubset}\uff09` : ` (incl. AI-dropped ${aiDroppedSubset})`) : ""}`;
+				if (status && status.done) {
+					if (!total) return this.isChineseUiLanguage() ? "已加载翻译：开启，暂无待翻译" : "Loaded translation: on, no pending messages";
+					return this.isChineseUiLanguage() ? `已加载翻译：第 ${batch} 批完成，显示 ${displayed}/${total}${extraText}` : `Loaded translation: batch ${batch} done, shown ${displayed}/${total}${extraText}`;
+				}
+				if (status && status.collecting) return this.isChineseUiLanguage() ? `收集已加载：第 ${batch} 批 ${processed}/${total}${extraText}` : `Collecting loaded: batch ${batch} ${processed}/${total}${extraText}`;
+				if (!total) return this.isChineseUiLanguage() ? "已加载翻译：开启，等待消息" : "Loaded translation: on, waiting";
+				return this.isChineseUiLanguage() ? `翻译已加载：第 ${batch} 批 ${processed}/${total}，显示 ${displayed}${extraText}` : `Translating loaded: batch ${batch} ${processed}/${total}, shown ${displayed}${extraText}`;
+			}
+
+			getLoadedAutoTranslationSkipReasonText (reason) {
+				switch (reason) {
+					case "symbol_only": return this.isChineseUiLanguage() ? "\u7eaf\u7b26\u53f7/\u65e0\u81ea\u7136\u8bed\u8a00" : "symbol-only/no natural language";
+					case "link_only": return this.isChineseUiLanguage() ? "\u4ec5\u94fe\u63a5/\u53d7\u4fdd\u62a4\u5185\u5bb9" : "link-only/protected content";
+					case "same_language": return this.isChineseUiLanguage() ? "\u540c\u76ee\u6807\u8bed\u8a00" : "same target language";
+					case "too_similar": return this.isChineseUiLanguage() ? "\u4e0e\u539f\u6587\u8fc7\u4e8e\u76f8\u4f3c" : "too similar to source";
+					case "wrong_target_language": return this.isChineseUiLanguage() ? "\u8fd4\u56de\u8bed\u8a00\u4e0d\u5bf9" : "wrong target language";
+					case "ai_skip_signal": return this.isChineseUiLanguage() ? "AI\u5224\u5b9a\u65e0\u9700\u7ffb\u8bd1" : "AI skipped translation";
+					case "source_filter": return this.isChineseUiLanguage() ? "\u4e0d\u5728\u6e90\u8bed\u8a00\u7b5b\u9009\u5185" : "outside source-language filter";
+					case "local_guard": return this.isChineseUiLanguage() ? "\u672c\u5730\u4fdd\u62a4\u5140\u5e95\u4e22\u5f03" : "dropped by local safeguard";
+					case "out_of_range": return this.isChineseUiLanguage() ? "\u8d85\u51fa\u5f53\u524d\u5df2\u52a0\u8f7d\u8303\u56f4" : "outside loaded range";
+					default: return reason || (this.isChineseUiLanguage() ? "\u5df2\u8df3\u8fc7" : "skipped");
+				}
+			}
+
+			getLoadedAutoTranslationPreviewText (text) {
+				text = (text || "").replace(/\s+/g, " ").trim();
+				if (!text) return "";
+				return text.length > 24 ? `${text.slice(0, 24)}...` : text;
+			}
+
+			getLoadedAutoTranslationStatusTitleText (status) {
+				if (!status) return "";
+				const baseText = this.getLoadedAutoTranslationStatusText(status);
+				const detailParts = [];
+				if (status && status.lastSkipReason) detailParts.push(this.getLoadedAutoTranslationSkipReasonText(status.lastSkipReason));
+				if (status && status.lastSkipPreview) detailParts.push(status.lastSkipPreview);
+				return detailParts.length ? `${baseText} | ${this.isChineseUiLanguage() ? "\u6700\u8fd1\u8df3\u8fc7" : "Last skipped"}: ${detailParts.join(" | ")}` : baseText;
+			}
+
+			getAutoTranslatedResultRejectReason (translation, channelId) {
+				if (!translation || !translation.translatedContent) return "local_guard";
+				if (this.isTranslationResultTooSimilar(translation)) return "too_similar";
+				const detectedLanguageId = translation.input && translation.input.id;
+				const targetLanguageId = translation.output && translation.output.id || this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId);
+				if (this.shouldSkipSameLanguageReceivedMessages() && detectedLanguageId && this.isSameLanguageOrVariant(detectedLanguageId, targetLanguageId)) return "same_language";
+				const sourceLanguages = this.getReceivedAutoTranslateSourceLanguages();
+				if (sourceLanguages.length && detectedLanguageId && !this.matchesConfiguredSourceLanguage(detectedLanguageId, sourceLanguages)) return "source_filter";
+				if (this.shouldDropSimilarTranslations() && this.getTextSimilarityScore(translation.originalContent, translation.translatedContent) >= this.getTranslationSimilarityThreshold()) return "too_similar";
+				return null;
+			}
+
+			getReceivedAutoTranslateSkipReason (originalContentData, channelId) {
+				if (this.isLinkOnlyReceivedContent(originalContentData)) return "link_only";
+				if (!this.hasTranslatableMessageContent(originalContentData)) return "symbol_only";
+				const analysisSource = this.buildAutoTranslateAnalysisText(originalContentData);
+				if (!analysisSource.hasUnprotectedContent) return "symbol_only";
+				const targetLanguageId = this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId);
+				const analysis = this.analyzeTextForAutoTranslate(analysisSource.text, targetLanguageId);
+				if (!analysis.totalLetters) return "symbol_only";
+				if (this.isClearlyTargetLanguageMessage(analysis, targetLanguageId)) return "same_language";
+				if (this.shouldSkipSameLanguageReceivedMessages() && this.isMostlyTargetLanguageMessage(analysis, targetLanguageId)) return "same_language";
+				return null;
+			}
+
+			getLoadedAutoTranslationInlineStatusText (channelId = null) {
+				const selectedChannelId = channelId || BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+				const statusChannelId = loadedAutoTranslationStatus && loadedAutoTranslationStatus.channelId;
+				if (loadedAutoTranslationStatus && (loadedAutoTranslationStatus.active || loadedAutoTranslationStatus.done) && (!statusChannelId || statusChannelId == "__global" || statusChannelId == selectedChannelId)) return this.getLoadedAutoTranslationStatusText(loadedAutoTranslationStatus);
+				return this.isChineseUiLanguage() ? "已加载消息自动翻译已开启，等待当前批次…" : "Loaded-message auto-translate is on; waiting for the current batch…";
+			}
+
+			updateInlineLoadedAutoTranslationStatusElements () {
+				if (typeof document == "undefined") return;
+				let elements = [];
+				try {elements = Array.from(document.querySelectorAll(".translator-loaded-status-inline"));}
+				catch (err) {elements = [];}
+				for (const element of elements) {
+					if (element && element.remove) element.remove();
+				}
+			}
+
+			findNativeTextAreaStatusElement (anchorRect = null) {
+				if (typeof document == "undefined") return null;
+				let candidates = [];
+				try {candidates = Array.from(document.querySelectorAll("div, span"));}
+				catch (err) {return null;}
+				const matches = candidates.map(element => {
+					if (!element || element.id == "DiscordAITranslator-loaded-status" || !element.getBoundingClientRect) return null;
+					const text = (element.textContent || "").trim();
+					if (!text || !(/慢速模式|slow\s*mode|slowmode/i.test(text))) return null;
+					const rect = element.getBoundingClientRect();
+					if (!rect.width || !rect.height) return null;
+					if (anchorRect) {
+						const nearInputTop = rect.bottom <= anchorRect.top + 10 && rect.bottom >= anchorRect.top - 42;
+						const nearInputRight = rect.right <= anchorRect.right + 24 && rect.right >= anchorRect.left + anchorRect.width * 0.45;
+						const aboveInput = rect.top >= anchorRect.top - 58 && rect.top <= anchorRect.top + 8;
+						if (!nearInputTop || !nearInputRight || !aboveInput) return null;
+					}
+					return {element, rect, score: rect.right + rect.bottom};
+				}).filter(Boolean).sort((a, b) => b.score - a.score);
+				return matches[0] && matches[0].element || null;
+			}
+
+			isTranslateMasterSwitchVisuallyEnabled (channelId) {
+				if (!channelId || !this.isTranslationEnabled(channelId)) return false;
+				if (typeof document == "undefined") return false;
+				let buttons = [];
+				try {
+					const selector = [BDFDB.dotCN && BDFDB.dotCN._translatortranslatebutton, BDFDB.disCN && "." + BDFDB.disCN._translatortranslatebutton].filter(Boolean).join(",");
+					buttons = selector ? Array.from(document.querySelectorAll(selector)) : [];
+				}
+				catch (err) {buttons = [];}
+				if (!buttons.length) return false;
+				return buttons.some(button => button && button.classList && button.classList.contains(BDFDB.disCN._translatortranslating));
+			}
+
+			positionLoadedAutoTranslationStatusElement (element) {
+				if (!element || typeof document == "undefined") return;
+				const selectors = [BDFDB.dotCN && BDFDB.dotCN.channeltextarea, '[class*="channelTextArea"]', 'form [role="textbox"]'];
+				let anchors = [];
+				for (const selector of selectors) {
+					if (!selector) continue;
+					try {anchors = anchors.concat(Array.from(document.querySelectorAll(selector)).filter(Boolean));}
+					catch (err) {}
+				}
+				anchors = anchors.map(anchor => {
+					if (!anchor || !anchor.getBoundingClientRect) return null;
+					const rect = anchor.getBoundingClientRect();
+					if (!rect.width || !rect.height) return null;
+					const visible = rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+					if (!visible) return null;
+					const nearBottom = Math.max(0, window.innerHeight - rect.bottom);
+					const widthScore = Math.min(rect.width, 900);
+					const score = widthScore - nearBottom * 2 + rect.right * 0.05;
+					return {anchor, rect, score};
+				}).filter(Boolean).sort((a, b) => b.score - a.score);
+				const anchorData = anchors[0];
+				const anchor = anchorData && anchorData.anchor;
+				const viewportPadding = 12;
+				let maxStatusWidth = Math.max(180, Math.min(360, window.innerWidth - viewportPadding * 2));
+				if (anchor && anchor.getBoundingClientRect) {
+					const anchorRect = anchor.getBoundingClientRect();
+					if (anchorRect && anchorRect.width) maxStatusWidth = Math.max(180, Math.min(maxStatusWidth, Math.floor(anchorRect.width * 0.55), anchorRect.width - 16));
+				}
+				element.style.maxWidth = `${Math.round(maxStatusWidth)}px`;
+				const measuredRect = element.getBoundingClientRect ? element.getBoundingClientRect() : null;
+				const statusWidth = Math.max(180, Math.min(measuredRect && measuredRect.width || element.offsetWidth || 260, maxStatusWidth));
+				const statusHeight = Math.max(18, measuredRect && measuredRect.height || element.offsetHeight || 20);
+				element.style.right = "auto";
+				element.style.bottom = "auto";
+				if (anchor && anchor.getBoundingClientRect) {
+					const rect = anchor.getBoundingClientRect();
+					const nativeStatus = this.findNativeTextAreaStatusElement(rect);
+					let left = rect.right - statusWidth - viewportPadding;
+					let top = rect.top - statusHeight - 8;
+					if (nativeStatus && nativeStatus.getBoundingClientRect) {
+						const nativeRect = nativeStatus.getBoundingClientRect();
+						// 检测到 Discord 原生“慢速模式已开启”时，放在它的上方并右对齐，不再横向挪到频道列表。
+						left = Math.max(rect.left + 8, Math.min(nativeRect.right - statusWidth, rect.right - statusWidth - 8));
+						top = nativeRect.top - statusHeight - 8;
+					}
+					else {
+						left = Math.max(rect.left + 8, Math.min(left, rect.right - statusWidth - 8));
+					}
+					top = Math.max(viewportPadding, Math.min(top, window.innerHeight - statusHeight - viewportPadding));
+					element.style.left = `${Math.round(left)}px`;
+					element.style.top = `${Math.round(top)}px`;
+				}
+				else {
+					element.style.left = `${Math.max(viewportPadding, window.innerWidth - statusWidth - 108)}px`;
+					element.style.top = `${Math.max(viewportPadding, window.innerHeight - statusHeight - 54)}px`;
+				}
+			}
+
+			isChannelTextAreaFocused () {
+				if (typeof document == "undefined") return false;
+				const activeElement = document.activeElement;
+				if (!activeElement || activeElement == document.body) return false;
+				const isTextInput = activeElement.tagName == "TEXTAREA" || activeElement.tagName == "INPUT" || activeElement.getAttribute && activeElement.getAttribute("role") == "textbox" || activeElement.isContentEditable;
+				if (!isTextInput) return false;
+				const selectors = [BDFDB.dotCN && BDFDB.dotCN.channeltextarea, '[class*="channelTextArea"]', "form"];
+				return selectors.some(selector => {
+					if (!selector) return false;
+					try {return !!(activeElement.matches && activeElement.matches(selector) || activeElement.closest && activeElement.closest(selector));}
+					catch (err) {return false;}
+				});
+			}
+
+			ensureLoadedAutoTranslationStatusPositionWatcher () {
+				if (typeof window == "undefined" || this._loadedAutoTranslationStatusPositionWatcherAttached) return;
+				this._loadedAutoTranslationStatusPositionWatcherAttached = true;
+				this._loadedAutoTranslationStatusPositionHandler = _ => {
+					const element = typeof document != "undefined" && document.getElementById("DiscordAITranslator-loaded-status");
+					if (!element) return;
+					if (this._loadedAutoTranslationStatusPositionTimer) clearTimeout(this._loadedAutoTranslationStatusPositionTimer);
+					this._loadedAutoTranslationStatusPositionTimer = setTimeout(_ => {
+						this._loadedAutoTranslationStatusPositionTimer = null;
+						this.positionLoadedAutoTranslationStatusElement(element);
+					}, 80);
+				};
+				window.addEventListener("resize", this._loadedAutoTranslationStatusPositionHandler, {passive: true});
+				window.addEventListener("scroll", this._loadedAutoTranslationStatusPositionHandler, true);
+				try {
+					if (typeof ResizeObserver != "undefined" && document && document.body) {
+						this._loadedAutoTranslationStatusResizeObserver = new ResizeObserver(this._loadedAutoTranslationStatusPositionHandler);
+						this._loadedAutoTranslationStatusResizeObserver.observe(document.body);
+					}
+				}
+				catch (err) {}
+			}
+
+			detachLoadedAutoTranslationStatusPositionWatcher () {
+				if (typeof window == "undefined" || !this._loadedAutoTranslationStatusPositionWatcherAttached) return;
+				this._loadedAutoTranslationStatusPositionWatcherAttached = false;
+				if (this._loadedAutoTranslationStatusPositionHandler) {
+					window.removeEventListener("resize", this._loadedAutoTranslationStatusPositionHandler, {passive: true});
+					window.removeEventListener("scroll", this._loadedAutoTranslationStatusPositionHandler, true);
+				}
+				if (this._loadedAutoTranslationStatusResizeObserver) {
+					try {this._loadedAutoTranslationStatusResizeObserver.disconnect();}
+					catch (err) {}
+				}
+				this._loadedAutoTranslationStatusResizeObserver = null;
+				if (this._loadedAutoTranslationStatusPositionTimer) clearTimeout(this._loadedAutoTranslationStatusPositionTimer);
+				this._loadedAutoTranslationStatusPositionTimer = null;
+				this._loadedAutoTranslationStatusPositionHandler = null;
+			}
+
+			isTranslatorSettingsSurfaceOpen () {
+				if (typeof document == "undefined") return false;
+				try {
+					// Only this plugin's own settings/quick panels should hide the floating status.
+					// Generic Discord settings containers can remain in the DOM after closing and were hiding the capsule.
+					return !!document.querySelector(".translator-popout-auto-panel, .translator-settings-panel-root");
+				}
+				catch (err) {return false;}
+			}
+
+			removeLoadedAutoTranslationStatusElement () {
+				const element = typeof document != "undefined" && document.getElementById("DiscordAITranslator-loaded-status");
+				if (element) element.remove();
+				this.detachLoadedAutoTranslationStatusPositionWatcher();
+			}
+
+			shouldShowLoadedAutoTranslationStatus (status) {
+				if (!status || (!status.active && !status.done)) return false;
+				const selectedChannelId = BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+				const statusChannelId = status.channelId && status.channelId != "__global" ? status.channelId : selectedChannelId;
+				if (!statusChannelId || !selectedChannelId || statusChannelId != selectedChannelId) return false;
+				if (this.getReceivedAutoTranslateScope() != "loaded_messages") return false;
+				return this.isTranslationEnabled(statusChannelId) && this.isReceivedAutoTranslationEnabled(statusChannelId);
+			}
+
+			updateLoadedAutoTranslationStatus (updates = {}) {
+				loadedAutoTranslationStatus = Object.assign({}, loadedAutoTranslationStatus, updates);
+				if (!this.shouldShowLoadedAutoTranslationStatus(loadedAutoTranslationStatus)) {
+					this.removeLoadedAutoTranslationStatusElement();
+					return;
+				}
+				if (loadedAutoTranslationStatusHideTimer) {
+					clearTimeout(loadedAutoTranslationStatusHideTimer);
+					loadedAutoTranslationStatusHideTimer = null;
+				}
+				if (typeof document == "undefined" || !document.body) return;
+				this.attachAutoTranslationScrollWatcher();
+				this.ensureLoadedAutoTranslationStatusPositionWatcher();
+				let element = document.getElementById("DiscordAITranslator-loaded-status");
+				if (!element) {
+					element = document.createElement("div");
+					element.id = "DiscordAITranslator-loaded-status";
+					document.body.appendChild(element);
+				}
+				// Always normalize the status DOM. This removes legacy progress-line children left by earlier builds.
+				element.className = "translator-loaded-status-floating";
+				if (!element.querySelector(".translator-loaded-status-text") || element.querySelector(".translator-loaded-status-progress")) {
+					element.innerHTML = '<span class="translator-loaded-status-dot"></span><span class="translator-loaded-status-text"></span>';
+				}
+				const textElement = element.querySelector(".translator-loaded-status-text");
+				if (textElement) textElement.textContent = this.getLoadedAutoTranslationStatusText(loadedAutoTranslationStatus);
+				element.title = this.getLoadedAutoTranslationStatusTitleText(loadedAutoTranslationStatus);
+				this.updateInlineLoadedAutoTranslationStatusElements();
+				this.positionLoadedAutoTranslationStatusElement(element);
+				requestAnimationFrame(_ => this.positionLoadedAutoTranslationStatusElement(element));
+			}
+
+			hideLoadedAutoTranslationStatus (delay = 1600) {
+				if (loadedAutoTranslationStatusHideTimer) clearTimeout(loadedAutoTranslationStatusHideTimer);
+				// In loaded-message mode the capsule is a persistent channel status, not a transient toast.
+				// Keep it visible while the feature is enabled; clearLoadedAutoTranslationStatus removes it when disabled.
+				if (this.shouldShowLoadedAutoTranslationStatus(loadedAutoTranslationStatus)) {
+					loadedAutoTranslationStatusHideTimer = null;
+					this.updateLoadedAutoTranslationStatus({});
+					return;
+				}
+				loadedAutoTranslationStatusHideTimer = setTimeout(_ => {
+					loadedAutoTranslationStatusHideTimer = null;
+					this.removeLoadedAutoTranslationStatusElement();
+				}, delay);
+			}
+
+			clearLoadedAutoTranslationStatus () {
+				if (loadedAutoTranslationStatusHideTimer) clearTimeout(loadedAutoTranslationStatusHideTimer);
+				loadedAutoTranslationStatusHideTimer = null;
+				loadedAutoTranslationStatus = {active: false, collecting: false, channelId: null, total: 0, processed: 0, batch: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""};
+				const element = typeof document != "undefined" && document.getElementById("DiscordAITranslator-loaded-status");
+				if (element) element.remove();
+				this.detachLoadedAutoTranslationStatusPositionWatcher();
+				this.updateInlineLoadedAutoTranslationStatusElements();
 			}
 
 			scheduleTranslationRerender (options = {}) {
-				const config = typeof options == "boolean" ? {batched: options} : Object.assign({batched: false}, options);
+				const config = typeof options == "boolean" ? {batched: options} : Object.assign({batched: false, deferHistorical: false, allowWhileSettings: false, allowWhileTyping: false}, options);
+				if (config.deferHistorical) {
+					historicalAutoTranslationRerenderPending = true;
+					historicalAutoTranslationPendingCount++;
+					return;
+				}
+				// Hard rule: while plugin settings/quick strategy panels are open, loaded-history
+				// translation may continue updating state, but it must not repaint the chat list.
+				if (!config.allowWhileSettings && this.isTranslatorSettingsSurfaceOpen()) {
+					historicalAutoTranslationRerenderPending = true;
+					if (!deferredSettingsRerenderTimer) deferredSettingsRerenderTimer = setTimeout(_ => {
+						deferredSettingsRerenderTimer = null;
+						this.scheduleTranslationRerender({batched: true});
+					}, 1000);
+					return;
+				}
+				if (!config.allowWhileTyping && this.isChannelTextAreaFocused()) {
+					if (deferredTextAreaRerenderTimer) clearTimeout(deferredTextAreaRerenderTimer);
+					deferredTextAreaRerenderTimer = setTimeout(_ => {
+						deferredTextAreaRerenderTimer = null;
+						this.scheduleTranslationRerender(Object.assign({}, config, {batched: true}));
+					}, 450);
+					return;
+				}
+				if (deferredTextAreaRerenderTimer) {
+					clearTimeout(deferredTextAreaRerenderTimer);
+					deferredTextAreaRerenderTimer = null;
+				}
 				if (!config.batched) {
 					if (translationRerenderTimer) clearTimeout(translationRerenderTimer);
 					translationRerenderTimer = null;
@@ -3506,6 +5400,120 @@ module.exports = (_ => {
 					translationRerenderTimer = null;
 					this.rerenderMessagesWithScrollPreserved();
 				}, rerenderDelay);
+			}
+
+			flushHistoricalAutoTranslationRerender (force = false) {
+				if (!historicalAutoTranslationRerenderPending) return;
+				// Loaded-message mode must not repaint the message list after every few translations.
+				// Repaint only when the selected loaded batch is finished, otherwise Discord's
+				// virtual message list keeps changing height and the input toolbar flickers.
+				if (!force) return;
+				historicalAutoTranslationRerenderPending = false;
+				historicalAutoTranslationPendingCount = 0;
+				historicalAutoTranslationLastFlushTime = Date.now();
+				this.scheduleTranslationRerender({batched: true});
+			}
+
+			sortAutoTranslationQueueForStableOrder () {
+				if (!autoTranslationQueue.length) return;
+				const historicalItems = [];
+				const liveItems = [];
+				for (const queueItem of autoTranslationQueue) {
+					if (queueItem && queueItem.historicalLoad) historicalItems.push(queueItem);
+					else liveItems.push(queueItem);
+				}
+				if (!historicalItems.length) return;
+				historicalItems.sort((itemA, itemB) => this.compareMessageIds(itemA && itemA.message && itemA.message.id, itemB && itemB.message && itemB.message.id));
+				// Hard rule: live incoming messages stay real-time, but loaded history is processed old -> new.
+				// Historical translations are deferred and flushed once per batch to avoid Discord list flicker.
+				autoTranslationQueue = liveItems.concat(historicalItems);
+			}
+
+			getHistoricalQueueItemChannelId (queueItem, fallbackChannelId = null) {
+				return queueItem && queueItem.channel && queueItem.channel.id || fallbackChannelId || loadedAutoTranslationStatus.channelId || "__global";
+			}
+
+			isHistoricalAutoTranslationSnapshotMessage (messageId, channelId = null) {
+				if (!historicalAutoTranslationBatchActive || !messageId) return false;
+				if (!historicalAutoTranslationBatchMessageIds[messageId]) return false;
+				return !historicalAutoTranslationBatchChannelId || !channelId || historicalAutoTranslationBatchChannelId == channelId;
+			}
+
+			createHistoricalAutoTranslationBatchSnapshot (firstItem) {
+				const channelId = this.getHistoricalQueueItemChannelId(firstItem);
+				const batchItems = [firstItem].concat(autoTranslationQueue.filter(queueItem => queueItem && queueItem.historicalLoad && this.getHistoricalQueueItemChannelId(queueItem, channelId) == channelId));
+				historicalAutoTranslationBatchMessageIds = {};
+				historicalAutoTranslationBatchChannelId = channelId;
+				historicalAutoTranslationBatchTotal = 0;
+				for (const item of batchItems) {
+					const messageId = item && item.message && item.message.id;
+					if (!messageId || historicalAutoTranslationBatchMessageIds[messageId]) continue;
+					historicalAutoTranslationBatchMessageIds[messageId] = true;
+					historicalAutoTranslationBatchTotal++;
+				}
+				if (!historicalAutoTranslationBatchTotal && firstItem && firstItem.message && firstItem.message.id) {
+					historicalAutoTranslationBatchMessageIds[firstItem.message.id] = true;
+					historicalAutoTranslationBatchTotal = 1;
+				}
+				loadedAutoTranslationPassCounts[channelId] = historicalAutoTranslationBatchTotal;
+				this.clearHistoricalAutoTranslationStaging(channelId);
+				return {channelId, total: historicalAutoTranslationBatchTotal};
+			}
+
+			stageHistoricalAutoTranslationResult (message, translation, originalContentData = null) {
+				if (!message || !message.id || !translation) return false;
+				const channelId = translation.channelId || this.getMessageChannelId(message);
+				historicalAutoTranslationStaging[message.id] = {
+					message: new BDFDB.DiscordObjects.Message(message),
+					translation: this.refreshTranslationDisplay(Object.assign({channelId, auto: true}, translation)),
+					originalContentData: originalContentData || this.extractOriginalContentData(message),
+					channelId
+				};
+				return true;
+			}
+
+			applyHistoricalAutoTranslationStaging (channelId = null) {
+				const stagedItems = Object.keys(historicalAutoTranslationStaging)
+					.map(messageId => historicalAutoTranslationStaging[messageId])
+					.filter(item => item && item.message && item.translation && (!channelId || item.channelId == channelId))
+					.sort((itemA, itemB) => this.compareMessageIds(itemA.message.id, itemB.message.id));
+				for (const item of stagedItems) {
+					this.applyStoredTranslationToMessage(item.message, item.translation, item.originalContentData);
+					delete historicalAutoTranslationStaging[item.message.id];
+				}
+				return stagedItems.length;
+			}
+
+			clearHistoricalAutoTranslationStaging (channelId = null) {
+				if (!channelId) {
+					historicalAutoTranslationStaging = {};
+					return;
+				}
+				for (const messageId of Object.keys(historicalAutoTranslationStaging)) {
+					const item = historicalAutoTranslationStaging[messageId];
+					if (item && item.channelId == channelId) delete historicalAutoTranslationStaging[messageId];
+				}
+			}
+
+			finishHistoricalAutoTranslationBatchIfDone () {
+				if (!historicalAutoTranslationBatchActive) return;
+				const hasMoreHistoricalItems = autoTranslationQueue.some(queueItem => {
+					if (!queueItem || !queueItem.historicalLoad || !queueItem.message) return false;
+					const itemChannelId = this.getHistoricalQueueItemChannelId(queueItem, historicalAutoTranslationBatchChannelId);
+					return this.isHistoricalAutoTranslationSnapshotMessage(queueItem.message.id, itemChannelId);
+				});
+				if (hasMoreHistoricalItems) return;
+				const channelId = historicalAutoTranslationBatchChannelId || loadedAutoTranslationStatus.channelId || null;
+				const finalTotal = Math.max(historicalAutoTranslationBatchTotal || 0, loadedAutoTranslationStatus.total || 0, historicalAutoTranslationBatchProcessedCount || 0);
+				this.applyHistoricalAutoTranslationStaging(channelId);
+				this.updateLoadedAutoTranslationStatus({active: false, collecting: false, done: true, channelId, batch: loadedAutoTranslationStatus.batch || 1, total: finalTotal, processed: Math.min(finalTotal || 0, historicalAutoTranslationBatchProcessedCount)});
+				historicalAutoTranslationBatchActive = false;
+				historicalAutoTranslationBatchProcessedCount = 0;
+				historicalAutoTranslationBatchMessageIds = {};
+				historicalAutoTranslationBatchChannelId = null;
+				historicalAutoTranslationBatchTotal = 0;
+				this.flushHistoricalAutoTranslationRerender(true);
+				this.scheduleLoadedAutoTranslationPostBatchRescan(channelId);
 			}
 
 			getDisplayedTranslationChannelId (messageId) {
@@ -3524,8 +5532,27 @@ module.exports = (_ => {
 					autoTranslationQueue = [];
 					queuedAutoTranslations = {};
 					queuedReplyPreviewTranslations = {};
+					autoTranslationEligibleReplyPreviewMessages = {};
+					replyPreviewRenderMessageIds = {};
+					historicalAutoTranslationRerenderPending = false;
+					historicalAutoTranslationPendingCount = 0;
+					historicalAutoTranslationPausedUntil = 0;
+					historicalAutoTranslationBatchActive = false;
+					historicalAutoTranslationBatchProcessedCount = 0;
+					this.clearHistoricalAutoTranslationStaging();
+					loadedAutoTranslationPassCounts = {};
+					loadedAutoTranslationPassRequestCounts = {};
+					loadedAutoTranslationPassScrollStamps = {};
+					loadedAutoTranslationAttemptedMessages = {};
 					if (autoTranslationQueueRetryTimer) clearTimeout(autoTranslationQueueRetryTimer);
 					autoTranslationQueueRetryTimer = null;
+					if (historicalAutoTranslationStartTimer) clearTimeout(historicalAutoTranslationStartTimer);
+					historicalAutoTranslationStartTimer = null;
+					if (historicalAutoTranslationScrollScanTimer) clearTimeout(historicalAutoTranslationScrollScanTimer);
+					historicalAutoTranslationScrollScanTimer = null;
+					if (historicalAutoTranslationPostBatchScanTimer) clearTimeout(historicalAutoTranslationPostBatchScanTimer);
+					historicalAutoTranslationPostBatchScanTimer = null;
+					this.clearLoadedAutoTranslationStatus();
 					return;
 				}
 				autoTranslationQueue = autoTranslationQueue.filter(queueItem => {
@@ -3534,17 +5561,30 @@ module.exports = (_ => {
 					return !shouldRemove;
 				});
 				for (const messageId of Object.keys(queuedReplyPreviewTranslations)) if (queuedReplyPreviewTranslations[messageId] == channelId) delete queuedReplyPreviewTranslations[messageId];
+				delete autoTranslationEligibleReplyPreviewMessages[channelId];
+				for (const messageId of Object.keys(loadedAutoTranslationAttemptedMessages)) if (loadedAutoTranslationAttemptedMessages[messageId] == channelId) delete loadedAutoTranslationAttemptedMessages[messageId];
+				if (historicalAutoTranslationBatchChannelId == channelId) {
+					historicalAutoTranslationBatchActive = false;
+					historicalAutoTranslationBatchProcessedCount = 0;
+					historicalAutoTranslationBatchMessageIds = {};
+					historicalAutoTranslationBatchChannelId = null;
+					historicalAutoTranslationBatchTotal = 0;
+				}
+				this.clearHistoricalAutoTranslationStaging(channelId);
+				delete loadedAutoTranslationPassCounts[channelId];
+				delete loadedAutoTranslationPassRequestCounts[channelId];
+				delete loadedAutoTranslationPassScrollStamps[channelId];
 				if (!autoTranslationQueue.length && autoTranslationQueueRetryTimer) {
 					clearTimeout(autoTranslationQueueRetryTimer);
 					autoTranslationQueueRetryTimer = null;
 				}
+				if (loadedAutoTranslationStatus.channelId == channelId) this.clearLoadedAutoTranslationStatus();
 			}
 
 			clearDisplayedTranslations (channelId = null) {
 				for (const messageId of Object.keys(translatedMessages)) {
 					if (channelId && this.getDisplayedTranslationChannelId(messageId) != channelId) continue;
-					delete translatedMessages[messageId];
-					delete suppressedAutoTranslations[messageId];
+					this.clearDisplayedTranslationState(messageId);
 				}
 				for (const messageId of Object.keys(replyPreviewTranslations)) {
 					if (channelId && replyPreviewTranslations[messageId].channelId != channelId) continue;
@@ -3558,8 +5598,14 @@ module.exports = (_ => {
 					const translation = translatedMessages[messageId];
 					if (!translation || !translation.auto) continue;
 					if (channelId && this.getDisplayedTranslationChannelId(messageId) != channelId) continue;
-					delete translatedMessages[messageId];
-					delete suppressedAutoTranslations[messageId];
+					this.clearDisplayedTranslationState(messageId);
+				}
+				for (const messageId of Object.keys(replyPreviewTranslations)) {
+					const translation = replyPreviewTranslations[messageId];
+					if (!translation || !translation.auto) continue;
+					if (channelId && translation.channelId != channelId) continue;
+					delete replyPreviewTranslations[messageId];
+					delete queuedReplyPreviewTranslations[messageId];
 				}
 			}
 
@@ -3576,8 +5622,96 @@ module.exports = (_ => {
 				return storedTranslation;
 			}
 
-			getReceivedAutoTranslatePreset () {
-				return this.settings.filters && this.settings.filters.receivedAutoTranslatePreset || "balanced";
+			getMentionDisplayName (userId, message = null) {
+				if (!userId) return null;
+				const mentionUsers = message && (message.mentions || message.mentioned_users || message.referencedMessage && message.referencedMessage.mentions);
+				if (Array.isArray(mentionUsers)) {
+					const mentionUser = mentionUsers.find(user => user && String(user.id) == String(userId));
+					if (mentionUser) return mentionUser.globalName || mentionUser.global_name || mentionUser.displayName || mentionUser.nick || mentionUser.username || mentionUser.name || null;
+				}
+				try {
+					const user = BDFDB.LibraryStores.UserStore && BDFDB.LibraryStores.UserStore.getUser && BDFDB.LibraryStores.UserStore.getUser(userId);
+					if (user) return user.globalName || user.global_name || user.displayName || user.username || user.name || null;
+				}
+				catch (err) {}
+				return null;
+			}
+
+			restoreDiscordMentionTagsForDisplay (text, message = null) {
+				if (typeof text != "string" || !text) return text;
+				return text.replace(/<@!?(\d+)>/g, (fullMatch, userId) => {
+					const displayName = this.getMentionDisplayName(userId, message);
+					return displayName ? `@${displayName}` : fullMatch;
+				});
+			}
+
+			clearDisplayedTranslationState (messageId, options = {}) {
+				if (!messageId) return;
+				const config = Object.assign({
+					clearReplyPreview: false,
+					preserveSuppressed: false
+				}, options);
+				delete translatedMessages[messageId];
+				if (!config.preserveSuppressed) delete suppressedAutoTranslations[messageId];
+				if (config.clearReplyPreview) {
+					delete replyPreviewTranslations[messageId];
+					delete queuedReplyPreviewTranslations[messageId];
+				}
+			}
+
+			getStoredTranslationChannelId (messageId, fallbackChannelId = null, translation = null) {
+				if (fallbackChannelId) return fallbackChannelId;
+				if (translation && translation.channelId) return translation.channelId;
+				const displayedTranslation = translatedMessages[messageId];
+				if (displayedTranslation && displayedTranslation.channelId) return displayedTranslation.channelId;
+				const replyPreviewTranslation = replyPreviewTranslations[messageId];
+				if (replyPreviewTranslation && replyPreviewTranslation.channelId) return replyPreviewTranslation.channelId;
+				return oldMessages[messageId] && oldMessages[messageId].channel_id || null;
+			}
+
+			shouldDisplayStoredTranslation (translation, channelId = null) {
+				if (!translation) return false;
+				const normalizedTranslation = this.normalizeStoredTranslationData(translation);
+				if (normalizedTranslation.manual && normalizedTranslation.independentOfTextAreaSwitch) return true;
+				const resolvedChannelId = channelId || normalizedTranslation.channelId || null;
+				if (normalizedTranslation.auto && resolvedChannelId && (!this.isTranslationEnabled(resolvedChannelId) || !this.isReceivedAutoTranslationEnabled(resolvedChannelId))) return false;
+				return true;
+			}
+
+			getStoredTranslationOriginalContent (translation, fallbackContent = "") {
+				if (!translation) return fallbackContent;
+				const normalizedTranslation = this.normalizeStoredTranslationData(translation);
+				return normalizedTranslation.originalContent != null ? String(normalizedTranslation.originalContent) : fallbackContent;
+			}
+
+			getActiveMessageTranslation (message, channelId = null, expectedSignature = null) {
+				if (!message || !message.id) return null;
+				let translation = translatedMessages[message.id];
+				if (!translation) return null;
+				const resolvedChannelId = this.getStoredTranslationChannelId(message.id, channelId, translation);
+				if (!this.shouldDisplayStoredTranslation(translation, resolvedChannelId)) {
+					this.clearDisplayedTranslationState(message.id);
+					return null;
+				}
+				if (expectedSignature && translation.signature && translation.signature != expectedSignature) {
+					this.clearDisplayedTranslationState(message.id);
+					return null;
+				}
+				translation = this.refreshTranslationDisplay(translation);
+				translatedMessages[message.id] = translation;
+				return translation;
+			}
+
+			getActiveReplyPreviewTranslation (message, channelId) {
+				if (!message || !message.id) return null;
+				const translation = this.getReplyPreviewTranslation(message, channelId);
+				if (!translation) return null;
+				if (!this.shouldDisplayStoredTranslation(translation, channelId)) {
+					delete replyPreviewTranslations[message.id];
+					delete queuedReplyPreviewTranslations[message.id];
+					return null;
+				}
+				return translation;
 			}
 
 			getReceivedAutoTranslateScope () {
@@ -3585,19 +5719,34 @@ module.exports = (_ => {
 				return scope == "loaded_messages" ? "loaded_messages" : "new_only";
 			}
 
+			getReceivedAutoTranslateLoadedRangeMode () {
+				return LOADED_AUTO_TRANSLATE_RANGE_MODES.COUNT;
+			}
+
 			getReceivedAutoTranslateLoadedTimeWindow () {
 				const value = this.settings.filters && this.settings.filters.receivedAutoTranslateLoadedTimeWindow;
 				return ["15m", "1h", "6h", "24h", "all"].includes(value) ? value : "1h";
 			}
 
+			getReceivedAutoTranslateLoadedLimit () {
+				return this.normalizeLoadedAutoTranslateLimit(this.settings.filters && this.settings.filters.receivedAutoTranslateLoadedLimit);
+			}
+
+			shouldPauseLoadedAutoTranslateWhileScrolling () {
+				return !(this.settings.filters && this.settings.filters.pauseLoadedAutoTranslateWhileScrolling === false);
+			}
+
+			shouldContinueLoadedAutoTranslateOnScroll () {
+				return !(this.settings.filters && this.settings.filters.continueLoadedAutoTranslateOnScroll === false);
+			}
+
 			getReceivedAutoTranslateLoadedTimeWindowMs () {
-				switch (this.getReceivedAutoTranslateLoadedTimeWindow()) {
-					case "15m": return 15 * 60 * 1000;
-					case "1h": return 60 * 60 * 1000;
-					case "6h": return 6 * 60 * 60 * 1000;
-					case "24h": return 24 * 60 * 60 * 1000;
-					default: return 0;
-				}
+				const window = this.getReceivedAutoTranslateLoadedTimeWindow();
+				if (window == "15m") return 15 * 60 * 1000;
+				if (window == "1h") return 60 * 60 * 1000;
+				if (window == "6h") return 6 * 60 * 60 * 1000;
+				if (window == "24h") return 24 * 60 * 60 * 1000;
+				return 0;
 			}
 
 			getMessageTimestampMs (message) {
@@ -3634,15 +5783,88 @@ module.exports = (_ => {
 				return Date.now() - timestampMs <= windowMs;
 			}
 
+			isMessageWithinLoadedRange (message) {
+				if (this.getReceivedAutoTranslateLoadedRangeMode() == LOADED_AUTO_TRANSLATE_RANGE_MODES.TIME) return this.isMessageWithinLoadedTimeWindow(message);
+				return true;
+			}
+
+			isLikelyLiveAutoTranslateMessage (message, channelId = null) {
+				if (!message || !message.id) return false;
+				channelId = channelId || this.getMessageChannelId(message);
+				const channelState = this.getAutoTranslationChannelState(channelId);
+				// Hard rule: in loaded-message mode, historical messages must not become "live"
+				// just because their timestamp is recent. Live messages are identified by the
+				// channel boundary only; this keeps loaded batches old-to-new and prevents flicker.
+				return !!(channelState && this.isMessageIdNewer(message.id, channelState.boundaryMessageId));
+			}
+
 			shouldDeferInitialAutoTranslate (channelId) {
 				if (!channelId || this.getReceivedAutoTranslateScope() == "loaded_messages") return false;
 				const channelState = this.getAutoTranslationChannelState(channelId);
 				return !!(channelState && !channelState.initialized);
 			}
 
+			attachAutoTranslationScrollWatcher () {
+				if (autoTranslationScrollWatcherAttached) return;
+				const messagesScroller = document.querySelector(BDFDB.dotCN.messagesscroller);
+				if (!messagesScroller) return;
+				autoTranslationScrollWatcherAttached = true;
+				messagesScroller.addEventListener("scroll", _ => {
+					lastAutoTranslationUserScrollTime = Date.now();
+					this.scheduleLoadedAutoTranslationScrollRescan();
+				}, {passive: true});
+			}
+
+			scheduleLoadedAutoTranslationScrollRescan () {
+				if (this.getReceivedAutoTranslateScope() != "loaded_messages" || !this.shouldContinueLoadedAutoTranslateOnScroll()) return;
+				const channelId = BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+				if (!channelId || !this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId)) return;
+				if (historicalAutoTranslationScrollScanTimer) clearTimeout(historicalAutoTranslationScrollScanTimer);
+				historicalAutoTranslationScrollScanTimer = setTimeout(_ => {
+					historicalAutoTranslationScrollScanTimer = null;
+					if (this.getReceivedAutoTranslateScope() != "loaded_messages" || !this.shouldContinueLoadedAutoTranslateOnScroll()) return;
+					const selectedChannelId = BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+					if (!selectedChannelId || !this.isTranslationEnabled(selectedChannelId) || !this.isReceivedAutoTranslationEnabled(selectedChannelId)) return;
+					loadedAutoTranslationPassCounts[selectedChannelId] = 0;
+					loadedAutoTranslationPassRequestCounts[selectedChannelId] = 0;
+					loadedAutoTranslationPassScrollStamps[selectedChannelId] = lastAutoTranslationUserScrollTime || Date.now();
+					for (const messageId of Object.keys(loadedAutoTranslationAttemptedMessages)) if (loadedAutoTranslationAttemptedMessages[messageId] == selectedChannelId) delete loadedAutoTranslationAttemptedMessages[messageId];
+					this.updateLoadedAutoTranslationStatus({active: true, collecting: true, done: false, channelId: selectedChannelId, batch: (loadedAutoTranslationBatchNumbers[selectedChannelId] || loadedAutoTranslationStatus.batch || 0) + 1, total: 0, processed: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""});
+					this.scheduleTranslationRerender({batched: true, allowWhileSettings: true});
+					setTimeout(_ => this.processAutoTranslationQueue(), HISTORICAL_AUTO_TRANSLATION_COLLECT_DELAY + 50);
+				}, AUTO_TRANSLATION_SCROLL_IDLE_DELAY + 180);
+			}
+
+			scheduleLoadedAutoTranslationPostBatchRescan (channelId = null) {
+				channelId = channelId || loadedAutoTranslationStatus.channelId || BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+				if (!channelId || this.getReceivedAutoTranslateScope() != "loaded_messages" || !this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId)) return;
+				if (historicalAutoTranslationPostBatchScanTimer) clearTimeout(historicalAutoTranslationPostBatchScanTimer);
+				historicalAutoTranslationPostBatchScanTimer = setTimeout(_ => {
+					historicalAutoTranslationPostBatchScanTimer = null;
+					if (this.getReceivedAutoTranslateScope() != "loaded_messages" || !this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId)) return;
+					loadedAutoTranslationPassCounts[channelId] = 0;
+					loadedAutoTranslationPassRequestCounts[channelId] = 0;
+					for (const messageId of Object.keys(loadedAutoTranslationAttemptedMessages)) if (loadedAutoTranslationAttemptedMessages[messageId] == channelId) delete loadedAutoTranslationAttemptedMessages[messageId];
+					this.updateLoadedAutoTranslationStatus({active: true, collecting: true, done: false, channelId, batch: (loadedAutoTranslationBatchNumbers[channelId] || loadedAutoTranslationStatus.batch || 0) + 1, total: 0, processed: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""});
+					this.scheduleTranslationRerender({batched: true, allowWhileSettings: true});
+					setTimeout(_ => this.processAutoTranslationQueue(), HISTORICAL_AUTO_TRANSLATION_COLLECT_DELAY + 50);
+				}, 900);
+			}
+
+			isUserActivelyScrollingMessages () {
+				return Date.now() - lastAutoTranslationUserScrollTime < AUTO_TRANSLATION_SCROLL_IDLE_DELAY;
+			}
+
 			isViewingMessageHistory () {
 				const scrollerState = this.captureMessageScrollerState();
 				return !!(scrollerState && !scrollerState.keepBottom);
+			}
+
+			shouldPauseHistoricalAutoTranslation () {
+				if (Date.now() < (historicalAutoTranslationPausedUntil || 0)) return true;
+				if (!this.shouldPauseLoadedAutoTranslateWhileScrolling()) return false;
+				this.attachAutoTranslationScrollWatcher();
+				return this.isUserActivelyScrollingMessages();
 			}
 
 			scheduleAutoTranslationQueueRetry () {
@@ -3653,21 +5875,26 @@ module.exports = (_ => {
 				}, AUTO_TRANSLATION_QUEUE_RETRY_DELAY);
 			}
 
+			scheduleHistoricalAutoTranslationStart () {
+				if (historicalAutoTranslationStartTimer) clearTimeout(historicalAutoTranslationStartTimer);
+				historicalAutoTranslationStartTimer = setTimeout(_ => {
+					historicalAutoTranslationStartTimer = null;
+					this.processAutoTranslationQueue();
+				}, HISTORICAL_AUTO_TRANSLATION_COLLECT_DELAY);
+			}
+
 			getReceivedAutoTranslateSourceLanguages () {
 				const sourceLanguages = this.settings.filters && BDFDB.ArrayUtils.is(this.settings.filters.receivedAutoTranslateSourceLanguages) ? this.settings.filters.receivedAutoTranslateSourceLanguages : [];
 				return [...new Set(sourceLanguages.filter(languageId => languages[languageId] && !languages[languageId].auto && !languages[languageId].special))];
 			}
 
 			getMinimumAutoTranslateLength () {
-				const value = this.settings.filters && this.settings.filters.minimumAutoTranslateLength;
-				return Math.max(1, Math.min(80, parseInt(value, 10) || 6));
+				// Do not skip short chat text. Even one-character or two-character interjections can carry meaning.
+				return 0;
 			}
 
 			getAutoTranslateMinimumLengthForAnalysis (analysis = null) {
-				const minimumLength = this.getMinimumAutoTranslateLength();
-				if (!analysis || !analysis.totalLetters) return minimumLength;
-				if (["han", "kana", "hangul"].includes(analysis.dominantFamily)) return Math.min(minimumLength, 2);
-				return minimumLength;
+				return this.getMinimumAutoTranslateLength();
 			}
 
 			getTranslationSimilarityThreshold () {
@@ -3680,18 +5907,71 @@ module.exports = (_ => {
 			}
 
 			shouldSkipMixedReceivedMessages () {
-				const preset = this.getReceivedAutoTranslatePreset();
-				return preset != "loose" && !!(this.settings.filters && this.settings.filters.skipMixedReceivedMessages !== false);
+				// Mixed-language skipping is too aggressive for Discord chat and conflicts with protected terms.
+				return false;
 			}
 
 			shouldSkipSameLanguageReceivedMessages () {
-				const preset = this.getReceivedAutoTranslatePreset();
-				return preset != "loose" && !!(this.settings.filters && this.settings.filters.skipSameLanguageReceivedMessages !== false);
+				return !!(this.settings.filters && this.settings.filters.skipSameLanguageReceivedMessages !== false);
 			}
 
 			shouldDropSimilarTranslations () {
-				const preset = this.getReceivedAutoTranslatePreset();
-				return preset != "loose" && !!(this.settings.filters && this.settings.filters.dropSimilarTranslations !== false);
+				return !!(this.settings.filters && this.settings.filters.dropSimilarTranslations !== false);
+			}
+
+			getAutoTranslateDecisionMode () {
+				const mode = this.settings.filters && this.settings.filters.autoTranslateDecisionMode;
+				return mode == "ai" ? "ai" : "basic";
+			}
+
+			supportsAiAutoTranslateDecisionEngine (engineKey) {
+				return ["deepseek", "oaicompat"].includes(engineKey);
+			}
+
+			isAiAutoTranslateDecisionAvailable () {
+				return this.supportsAiAutoTranslateDecisionEngine(this.settings.engines && this.settings.engines.translator) || this.supportsAiAutoTranslateDecisionEngine(this.settings.engines && this.settings.engines.backup);
+			}
+
+			shouldUseAiAutoTranslateDecision () {
+				return this.getAutoTranslateDecisionMode() == "ai" && this.isAiAutoTranslateDecisionAvailable();
+			}
+
+			getDefaultAiAutoTranslatePrompt () {
+				return "输入语言：{{INPUT_LANGUAGE}}\n输出语言：{{OUTPUT_LANGUAGE}}\n\n只翻译消息中不是输出语言的自然语言内容，译成输出语言。已是输出语言的内容保持原样。\n\n保留原样：URL、IP、端口、@用户名、频道名、ID、代码、命令、表情、⟦0⟧/⟦1⟧ 等保护占位符。专有名词、产品名、模型名、游戏/技术术语默认保留；若在输出语言中有公认译名或官方译名，可使用该译名。\n\n禁止：把源语言同义改写成源语言；把已是输出语言的内容润色改写；解释原文。\n\n如果没有需要翻译的自然语言，或消息主要已是输出语言且只夹杂专名/缩写/技术词，只输出 __SKIP_TRANSLATION__。\n需要翻译时只输出处理后的消息。";
+			}
+
+			getLegacyAiAutoTranslatePrompts () {
+				return [
+					"任务：判断 Discord 收到消息是否需要翻译；需要时，只翻译非目标语言的自然语言内容。\n规则：\n1. 消息里存在非目标语言的自然语言内容：只翻译这些内容。\n2. 已经是目标语言的内容保持原样，不要重写、润色或改写。\n3. 专有名词、产品名、模型名、游戏术语、技术术语、URL、IP、端口、用户名、频道名、ID、代码、命令、表情符号保持原样。\n4. {{0}}、{{1}}、{{2}} 等保护占位符必须逐字保留，数量、顺序和位置不能改变。\n5. 如果消息只有链接、表情、用户名、数字、代码、命令、IP、端口、占位符，或没有需要翻译的自然语言内容，只输出 __SKIP_TRANSLATION__。\n6. 如果消息已经主要是目标语言，且只夹杂专有名词、产品名、英文缩写或技术词，只输出 __SKIP_TRANSLATION__。\n输出：需要翻译时只输出处理后的消息；不需要翻译时只输出 __SKIP_TRANSLATION__。不要解释，不要添加注释。",
+					"任务：判断 Discord 收到消息是否需要翻译，并在需要时直接翻译成目标语言。\n规则：\n1. 主要自然语言已是目标语言：只输出 __SKIP_TRANSLATION__。\n2. 只有链接、表情、用户名、频道名、ID、数字、IP、端口、代码、命令或占位符：只输出 __SKIP_TRANSLATION__。\n3. 主要自然语言不是目标语言：翻译主要文本。\n4. 英文产品名、游戏术语、URL、IP、端口、用户名、表情不是“混合语言跳过”理由，保留即可。\n5. {{0}}、{{1}} 等保护占位符必须逐字保留，数量和顺序不能改变。\n输出：需要翻译时只输出译文；不需要翻译时只输出 __SKIP_TRANSLATION__。",
+					"你是 Discord 聊天翻译判断器。判断这条收到的消息是否值得翻译成目标语言。\n需要翻译：主要内容不是目标语言；即使包含链接、表情、用户名、英文产品名、IP、端口、游戏术语，也不要因此跳过；混合少量英文关键词时，仍然翻译主要外语内容。\n不需要翻译：消息已经主要是目标语言；只有链接、表情、数字、代码、用户名；翻译后和原文几乎一样。\n保护占位符如 {{0}}、{{1}} 必须原样保留，不要改写。\n需要翻译时只输出译文；不需要翻译时只输出 __SKIP_TRANSLATION__。"
+				];
+			}
+
+			getLanguagePromptName (languageData) {
+				if (!languageData) return "";
+				if (languageData.auto) return this.getCustomText("detect_language_label") || "Auto detect";
+				return [languageData.name, languageData.ownlang, languageData.id].filter(Boolean).join(" / ");
+			}
+
+			getAiAutoTranslatePrompt (translationData = null) {
+				const customPrompt = this.settings.filters && this.settings.filters.aiAutoTranslatePrompt;
+				let prompt = this.getDefaultAiAutoTranslatePrompt();
+				if (typeof customPrompt == "string" && customPrompt.trim()) {
+					const trimmedPrompt = customPrompt.trim();
+					if (!this.getLegacyAiAutoTranslatePrompts().some(legacyPrompt => trimmedPrompt == legacyPrompt.trim())) prompt = customPrompt;
+				}
+				if (!translationData) return prompt;
+				const inputLanguage = this.getLanguagePromptName(translationData.input) || "Auto detect";
+				const outputLanguage = this.getLanguagePromptName(translationData.output) || "Target language";
+				return prompt
+					.replace(/\{\{INPUT_LANGUAGE\}\}/g, inputLanguage)
+					.replace(/\{\{OUTPUT_LANGUAGE\}\}/g, outputLanguage)
+					.replace(/\{\{TARGET_LANGUAGE\}\}/g, outputLanguage);
+			}
+
+			isSkipTranslationSignal (translation) {
+				return typeof translation == "string" && translation.trim().replace(/[。.!！\s]+$/g, "") == AI_SKIP_TRANSLATION_TOKEN;
 			}
 
 			getLanguageScriptFamilies (languageId) {
@@ -3753,22 +6033,118 @@ module.exports = (_ => {
 			analyzeTextForAutoTranslate (text, targetLanguageId) {
 				const cleanedText = this.sanitizeTextForAutoTranslateAnalysis(text);
 				const counts = this.countScriptFamilies(cleanedText);
+				const latinWordCount = (cleanedText.match(/[A-Za-z][A-Za-z0-9._+-]*/g) || []).length;
+				const hanRunCount = (cleanedText.match(/[\u4E00-\u9FFF]+/g) || []).length;
 				const scriptEntries = Object.entries(counts).filter(([, count]) => count > 0).sort((entryA, entryB) => entryB[1] - entryA[1]);
 				const totalLetters = scriptEntries.reduce((sum, [, count]) => sum + count, 0);
 				const targetFamilies = this.getLanguageScriptFamilies(targetLanguageId);
+				const targetLetterCount = targetFamilies.reduce((sum, family) => sum + (counts[family] || 0), 0);
+				const nonTargetLetterCount = Math.max(0, totalLetters - targetLetterCount);
+				const targetShare = totalLetters ? targetLetterCount / totalLetters : 0;
 				const dominantEntry = scriptEntries[0] || ["", 0];
 				const secondaryEntry = scriptEntries[1] || ["", 0];
 				const dominantShare = totalLetters ? dominantEntry[1] / totalLetters : 0;
 				const secondaryShare = totalLetters ? secondaryEntry[1] / totalLetters : 0;
 				const isMixed = dominantEntry[1] >= 2 && secondaryEntry[1] >= 2 && dominantShare >= 0.2 && secondaryShare >= 0.2;
-				const strongTargetScriptMatch = targetFamilies[0] != "latin" && dominantEntry[1] >= 3 && dominantShare >= 0.65 && targetFamilies.includes(dominantEntry[0]) && !isMixed;
+				const strongTargetScriptMatch = targetFamilies[0] != "latin" && targetLetterCount >= 3 && targetShare >= 0.65 && (!isMixed || nonTargetLetterCount <= Math.max(2, targetLetterCount * 0.35));
 				return {
 					cleanedText,
+					counts,
+					latinWordCount,
+					hanRunCount,
+					targetFamilies,
 					totalLetters,
+					targetLetterCount,
+					nonTargetLetterCount,
+					targetShare,
 					dominantFamily: dominantEntry[0] || null,
 					isMixed,
 					strongTargetScriptMatch
 				};
+			}
+
+			isHanTargetMessageWithLatinTerms (analysis, targetLanguageId) {
+				if (!analysis || !analysis.totalLetters) return false;
+				const targetFamilies = analysis.targetFamilies || this.getLanguageScriptFamilies(targetLanguageId);
+				if (!targetFamilies.includes("han")) return false;
+				if (analysis.targetLetterCount < 2 || analysis.hanRunCount < 1) return false;
+				const latinCount = analysis.counts && analysis.counts.latin || 0;
+				const nonTargetNonLatinLetterCount = Math.max(0, analysis.nonTargetLetterCount - latinCount);
+				if (nonTargetNonLatinLetterCount > 0) return false;
+				if (!latinCount) return true;
+				if (analysis.latinWordCount > 3) return false;
+				return analysis.targetShare >= 0.18;
+			}
+
+			isMostlyTargetLanguageMessage (analysis, targetLanguageId) {
+				if (!analysis || !analysis.totalLetters) return false;
+				const targetFamilies = analysis.targetFamilies || this.getLanguageScriptFamilies(targetLanguageId);
+				// Latin-script languages share the same script, so local script heuristics cannot safely
+				// tell English/French/Spanish apart. Let the translator or AI decision handle those.
+				if (!targetFamilies.length || targetFamilies[0] == "latin") return false;
+				if (this.isHanTargetMessageWithLatinTerms(analysis, targetLanguageId)) return true;
+				if (analysis.targetLetterCount >= 6 && analysis.targetShare >= 0.55) return true;
+				if (analysis.targetLetterCount >= 12 && analysis.targetShare >= 0.45 && analysis.nonTargetLetterCount <= Math.max(8, analysis.targetLetterCount * 0.8)) return true;
+				return !!analysis.strongTargetScriptMatch;
+			}
+
+			isClearlyTargetLanguageMessage (analysis, targetLanguageId) {
+				if (!analysis || !analysis.totalLetters) return false;
+				const targetFamilies = analysis.targetFamilies || this.getLanguageScriptFamilies(targetLanguageId);
+				if (!targetFamilies.length || targetFamilies[0] == "latin") return false;
+				// Hard pre-check before sending received messages to a translator. This is intentionally
+				// stricter than the post-check but stronger than the old heuristic for CJK/Cyrillic/etc.
+				// It prevents target-language chat from being sent to AI and rewritten in the same language.
+				if (this.isHanTargetMessageWithLatinTerms(analysis, targetLanguageId)) return true;
+				if (analysis.targetLetterCount >= 3 && analysis.targetShare >= 0.82) return true;
+				if (analysis.targetLetterCount >= 6 && analysis.targetShare >= 0.68 && analysis.nonTargetLetterCount <= Math.max(3, Math.floor(analysis.targetLetterCount * 0.25))) return true;
+				if (analysis.targetLetterCount >= 12 && analysis.targetShare >= 0.6 && analysis.nonTargetLetterCount <= Math.max(6, Math.floor(analysis.targetLetterCount * 0.35))) return true;
+				return false;
+			}
+
+			shouldSkipReceivedTranslationBeforeRequest (originalContentData, channelId) {
+				if (!originalContentData || !channelId) return false;
+				if (this.isLinkOnlyReceivedContent(originalContentData)) return true;
+				const targetLanguageId = this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId);
+				const targetLanguage = languages[targetLanguageId];
+				if (!targetLanguageId || targetLanguageId == "auto" || targetLanguage && targetLanguage.special) return false;
+				const analysisSource = this.buildAutoTranslateAnalysisText(originalContentData);
+				if (!analysisSource || !analysisSource.hasUnprotectedContent) return false;
+				const analysis = this.analyzeTextForAutoTranslate(analysisSource.text, targetLanguageId);
+				return this.isClearlyTargetLanguageMessage(analysis, targetLanguageId);
+			}
+
+			isTranslationLikelyInTargetLanguage (text, targetLanguageId) {
+				targetLanguageId = this.normalizeLanguageId(targetLanguageId);
+				if (!text || !targetLanguageId || targetLanguageId == "auto") return true;
+				const targetLanguage = languages[targetLanguageId];
+				if (targetLanguage && targetLanguage.special) return true;
+				const targetFamilies = this.getLanguageScriptFamilies(targetLanguageId);
+				// Latin-script languages cannot be reliably distinguished by local script checks.
+				// Keep validation conservative and only block obvious non-Latin target mismatches.
+				if (!targetFamilies.length || targetFamilies[0] == "latin") return true;
+				const analysis = this.analyzeTextForAutoTranslate(text, targetLanguageId);
+				if (!analysis || !analysis.totalLetters) return true;
+				if (analysis.totalLetters < 4) return true;
+				if (analysis.targetLetterCount == 0 && analysis.nonTargetLetterCount >= 4) return false;
+				if (analysis.targetLetterCount >= 2 && analysis.targetShare >= 0.2) return true;
+				return analysis.targetLetterCount >= 4 || analysis.targetShare >= 0.35;
+			}
+
+			buildAutoTranslateAnalysisText (originalContentData) {
+				const rawText = this.buildTranslationRequestText(originalContentData);
+				const [maskedText, , hasUnprotectedContent] = this.removeExceptions(rawText, messageTypes.RECEIVED);
+				return {text: maskedText || "", hasUnprotectedContent};
+			}
+
+			isLinkOnlyReceivedContent (originalContentData) {
+				if (!originalContentData) return false;
+				const content = (originalContentData.content || "").trim();
+				if (!content) return false;
+				const [maskedContent, , hasUnprotectedContent] = this.removeExceptions(content, messageTypes.RECEIVED);
+				if (hasUnprotectedContent) return false;
+				const counts = this.countScriptFamilies(maskedContent);
+				return !!maskedContent && Object.keys(counts).every(family => !counts[family]);
 			}
 
 			normalizeComparisonText (text) {
@@ -3812,64 +6188,466 @@ module.exports = (_ => {
 				return rootA && rootA == rootB;
 			}
 
+			isTranslationResultTooSimilar (translation) {
+				if (!translation) return false;
+				const normalizedTranslation = this.normalizeStoredTranslationData(translation);
+				const originalContent = (normalizedTranslation.originalContent || "").trim();
+				const translatedContent = (normalizedTranslation.translatedContent || normalizedTranslation.content || "").trim();
+				if (!originalContent || !translatedContent) return false;
+				const normalizedOriginal = this.normalizeComparisonText(originalContent);
+				const normalizedTranslated = this.normalizeComparisonText(translatedContent);
+				if (!normalizedOriginal || !normalizedTranslated) return false;
+				if (normalizedOriginal == normalizedTranslated) return true;
+				return this.getTextSimilarityScore(originalContent, translatedContent) >= Math.max(0.92, this.getTranslationSimilarityThreshold());
+			}
+
 			shouldKeepAutoTranslatedResult (translation, channelId) {
-				if (!translation || !translation.translatedContent) return false;
-				const detectedLanguageId = translation.input && translation.input.id;
-				const targetLanguageId = translation.output && translation.output.id || this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId);
-				if (this.shouldSkipSameLanguageReceivedMessages() && detectedLanguageId && this.isSameLanguageOrVariant(detectedLanguageId, targetLanguageId)) return false;
-				const sourceLanguages = this.getReceivedAutoTranslateSourceLanguages();
-				if (sourceLanguages.length && detectedLanguageId && !this.matchesConfiguredSourceLanguage(detectedLanguageId, sourceLanguages)) return false;
-				if (this.shouldDropSimilarTranslations() && this.getTextSimilarityScore(translation.originalContent, translation.translatedContent) >= this.getTranslationSimilarityThreshold()) return false;
-				return true;
+				return !this.getAutoTranslatedResultRejectReason(translation, channelId);
 			}
 
 			shouldAutoTranslateReceivedMessage (message, channel, originalContentData = null, ignoreQueued = false) {
 				if (!channel || !channel.id || !message || !message.id) return false;
-				if (!this.isTranslationEnabled(channel.id) || this.isOwnMessage(message)) return false;
+				if (!this.isTranslationEnabled(channel.id) || !this.isReceivedAutoTranslationEnabled(channel.id) || this.isOwnMessage(message)) return false;
 				if (suppressedAutoTranslations[message.id]) return false;
 				if (translatedMessages[message.id] || !ignoreQueued && queuedAutoTranslations[message.id]) return false;
 				const sourceData = originalContentData || this.extractOriginalContentData(message);
+				if (this.getCachedReceivedSkipDecision(message, channel.id, sourceData)) return false;
+				if (this.isLinkOnlyReceivedContent(sourceData)) return false;
 				if (!this.hasTranslatableMessageContent(sourceData)) return false;
-				const analysis = this.analyzeTextForAutoTranslate(this.buildTranslationRequestText(sourceData), this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channel.id));
+				const analysisSource = this.buildAutoTranslateAnalysisText(sourceData);
+				if (!analysisSource.hasUnprotectedContent) return false;
+				const targetLanguageId = this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channel.id);
+				const analysis = this.analyzeTextForAutoTranslate(analysisSource.text, targetLanguageId);
+				if (!analysis.totalLetters) return false;
 				if (analysis.totalLetters < this.getAutoTranslateMinimumLengthForAnalysis(analysis)) return false;
-				if (this.shouldSkipMixedReceivedMessages() && analysis.isMixed) return false;
-				if (this.shouldSkipSameLanguageReceivedMessages() && analysis.strongTargetScriptMatch) return false;
+				if (this.isClearlyTargetLanguageMessage(analysis, targetLanguageId)) return false;
+				if (this.shouldSkipSameLanguageReceivedMessages() && this.isMostlyTargetLanguageMessage(analysis, targetLanguageId)) return false;
 				return true;
 			}
 
 			queueAutoTranslateMessage (message, channel, originalContentData = null, queueOptions = {}) {
-				if (!this.shouldAutoTranslateReceivedMessage(message, channel, originalContentData)) return;
-				if (queueOptions.historicalLoad && !this.isMessageWithinLoadedTimeWindow(message)) return;
+				const cachedTranslation = queueOptions.cachedTranslation || null;
+				if (!cachedTranslation && !this.shouldAutoTranslateReceivedMessage(message, channel, originalContentData)) return;
+				if (queueOptions.historicalLoad && !this.isMessageWithinLoadedRange(message)) return;
 				queuedAutoTranslations[message.id] = true;
 				const queueItem = {
 					message,
 					channel,
 					originalContentData: originalContentData || this.extractOriginalContentData(message),
 					historicalLoad: !!queueOptions.historicalLoad,
-					deferWhileReading: !!queueOptions.deferWhileReading
+					deferWhileReading: !!queueOptions.deferWhileReading,
+					cachedTranslation
 				};
-				if (queueItem.historicalLoad) autoTranslationQueue.push(queueItem);
-				else autoTranslationQueue.unshift(queueItem);
-				this.processAutoTranslationQueue();
+				if (queueItem.historicalLoad) {
+					const channelId = channel && channel.id || "__global";
+					if (!this.isTranslationEnabled(channelId) || !this.isReceivedAutoTranslationEnabled(channelId)) {
+						delete queuedAutoTranslations[message.id];
+						this.clearLoadedAutoTranslationStatus();
+						return;
+					}
+					if (loadedAutoTranslationAttemptedMessages[message.id] && !cachedTranslation) {
+						delete queuedAutoTranslations[message.id];
+						return;
+					}
+					if (!this.shouldContinueLoadedAutoTranslateOnScroll() && loadedAutoTranslationStatus.done && loadedAutoTranslationStatus.channelId == channelId) {
+						delete queuedAutoTranslations[message.id];
+						return;
+					}
+					if (historicalAutoTranslationBatchActive && !this.isHistoricalAutoTranslationSnapshotMessage(message.id, channelId)) {
+						delete queuedAutoTranslations[message.id];
+						return;
+					}
+					if (this.shouldContinueLoadedAutoTranslateOnScroll()) {
+						const currentScrollStamp = lastAutoTranslationUserScrollTime || 0;
+						if ((loadedAutoTranslationPassScrollStamps[channelId] || 0) < currentScrollStamp) {
+							loadedAutoTranslationPassCounts[channelId] = 0;
+							loadedAutoTranslationPassRequestCounts[channelId] = 0;
+							loadedAutoTranslationPassScrollStamps[channelId] = currentScrollStamp;
+						}
+					}
+					const loadedLimit = this.getReceivedAutoTranslateLoadedLimit();
+					const countsTowardRequestLimit = !cachedTranslation;
+					const currentRequestCount = loadedAutoTranslationPassRequestCounts[channelId] || 0;
+					if (countsTowardRequestLimit && currentRequestCount >= loadedLimit) {
+						delete queuedAutoTranslations[message.id];
+						return;
+					}
+					if (countsTowardRequestLimit) loadedAutoTranslationPassRequestCounts[channelId] = currentRequestCount + 1;
+					const currentPassCount = loadedAutoTranslationPassCounts[channelId] || 0;
+					loadedAutoTranslationPassCounts[channelId] = currentPassCount + 1;
+					autoTranslationQueue.push(queueItem);
+					this.updateLoadedAutoTranslationStatus({active: true, collecting: true, done: false, channelId, batch: (loadedAutoTranslationBatchNumbers[channelId] || 0) + 1, total: loadedAutoTranslationPassCounts[channelId], processed: historicalAutoTranslationBatchProcessedCount || 0});
+					this.scheduleHistoricalAutoTranslationStart();
+				}
+				else {
+					autoTranslationQueue.unshift(queueItem);
+					this.processAutoTranslationQueue();
+				}
+			}
+
+
+			createStoredReceivedTranslationData (message, channelId, originalContentData, signature, translation, input, output, auto = false) {
+				if (!translation) return null;
+				let strings = String(translation).split(/\n{0,1}__________________ __________________ __________________\n{0,1}/);
+				let oldContent = (originalContentData && originalContentData.content || "").trim();
+				let translatedContent = (strings.shift() || "").trim();
+				if (!translatedContent) return null;
+				let content = this.buildReceivedDisplayContent(translatedContent, oldContent);
+				const embedIds = ((message && message.embeds) || []).map(embed => embed && embed.id).filter(Boolean);
+				let embeds = strings.reduce((dict, segment, index) => {
+					let embedId = embedIds[index];
+					if (!embedId) return dict;
+					let segmentLines = segment.split("\n");
+					let title = segmentLines.shift();
+					let description = segmentLines.shift();
+					let footerText = segmentLines.pop();
+					let fieldsSegment = segmentLines.join("\n").split("\n\n");
+					let fields = fieldsSegment.map(line => {
+						let [name, value] = line.split("__________________");
+						return {name, value};
+					});
+					dict[embedId] = {title, description, fields, footerText};
+					return dict;
+				}, {});
+				return {
+					signature,
+					channelId,
+					auto: !!auto,
+					content,
+					translatedContent,
+					originalContent: oldContent,
+					embeds,
+					input,
+					output
+				};
+			}
+
+			getHistoricalAiBatchItemLimit (channelId = null) {
+				return Math.max(LOADED_AUTO_TRANSLATE_LIMIT_MIN, Math.min(HISTORICAL_AI_BATCH_ITEM_LIMIT_MAX, this.getReceivedAutoTranslateLoadedLimit()));
+			}
+
+			getHistoricalAiBatchEngineKey (channelId = null) {
+				const engineKey = this.settings && this.settings.engines && this.settings.engines.translator;
+				if (!["deepseek", "oaicompat"].includes(engineKey)) return null;
+				const input = Object.assign({}, languages[this.getLanguageChoice(languageTypes.INPUT, messageTypes.RECEIVED, channelId)] || {});
+				const output = Object.assign({}, languages[this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId)] || {});
+				if (!input.id || !output.id || output.special) return null;
+				return this.validTranslator(engineKey, input, output, null) ? engineKey : null;
+			}
+
+			prepareHistoricalAiBatchQueueItem (queueItem, channelId, input, output) {
+				if (!queueItem || !queueItem.message || !queueItem.message.id) return null;
+				if (queueItem.cachedTranslation) return {queueItem, cachedTranslation: queueItem.cachedTranslation};
+				const cachedSkipDecision = this.getCachedReceivedSkipDecision(queueItem.message, channelId, queueItem.originalContentData);
+				if (cachedSkipDecision) return {queueItem, skipped: true, skipReason: cachedSkipDecision.reason, skipPreview: cachedSkipDecision.preview};
+				if (!this.shouldAutoTranslateReceivedMessage(queueItem.message, queueItem.channel, queueItem.originalContentData, true)) return {queueItem, skipped: true};
+				const originalContentData = queueItem.originalContentData || this.extractOriginalContentData(queueItem.message);
+				const rawText = this.buildTranslationRequestText(originalContentData);
+				const [protectedText, exceptions, shouldTranslate] = this.removeExceptions((rawText || "").trim(), messageTypes.RECEIVED);
+				if (!shouldTranslate || !protectedText) return {queueItem, skipped: true};
+				return {
+					queueItem,
+					message: queueItem.message,
+					channelId,
+					originalContentData,
+					signature: this.createReceivedTranslationSignature(queueItem.message, channelId, originalContentData),
+					protectedText,
+					exceptions,
+					input,
+					output
+				};
+			}
+
+			parseAiBatchTranslationResponse (content) {
+				content = (content || "").trim();
+				if (!content) return null;
+				content = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+				const firstArray = content.indexOf("[");
+				const lastArray = content.lastIndexOf("]");
+				if (firstArray > -1 && lastArray > firstArray) content = content.slice(firstArray, lastArray + 1);
+				try {
+					let parsed = JSON.parse(content);
+					if (parsed && Array.isArray(parsed.translations)) parsed = parsed.translations;
+					if (!Array.isArray(parsed)) return null;
+					return parsed.reduce((dict, item) => {
+						if (!item || item.id == null) return dict;
+						const value = item.translation != null ? item.translation : item.text;
+						dict[String(item.id)] = value == null ? "" : String(value);
+						return dict;
+					}, {});
+				}
+				catch (err) {return null;}
+			}
+
+			requestAiBatchTranslation (engineKey, preparedItems) {
+				return new Promise(resolve => {
+					if (!engineKey || !preparedItems || !preparedItems.length) return resolve(null);
+					const auth = authKeys[engineKey] || {};
+					const apiKey = auth.key || "";
+					const apiEndpoint = this.normalizeApiEndpoint(engineKey, auth.endpoint || translationEngines[engineKey].endpoint);
+					const modelId = auth.model || translationEngines[engineKey].model;
+					const output = preparedItems[0].output;
+					const input = preparedItems[0].input;
+					const payloadItems = preparedItems.map(item => ({
+						id: String(item.message.id),
+						text: item.protectedText.replace(/\n/g, " [NEWLINE] ").replace(/\s+/g, " ")
+					}));
+					const requestData = {
+						model: modelId,
+						messages: [{
+							role: "system",
+							content: "You are a strict Discord chat batch translator. Return valid JSON only."
+						}, {
+							role: "user",
+							content: `Target language is exactly ${output.name || output.id}. Input language is ${input && input.auto ? "auto-detect" : (input.name || input.id || "auto")}. The plugin has already filtered messages that should be skipped; do not make skip decisions.\nRules:\n1. Return ONLY a JSON array. Each item must be {"id":"same id","translation":"translated text"}.\n2. Translate every provided natural-language message into exactly the target language.\n3. Preserve placeholders like ⟦0⟧ and ⟦DTA0⟧ exactly. Preserve URLs, code, emoji, mentions, IDs, and product/model names.\n4. Convert [NEWLINE] markers back to real line breaks in the translation; do not show [NEWLINE] literally.\n5. Do not omit any source content, including short interjections, laughter, particles, repeated words, or standalone short lines; translate or preserve them naturally in the target language.\n6. Do not add explanations. Do not output any language other than the target language except preserved protected content.\n\nMessages JSON:\n${JSON.stringify(payloadItems)}`
+						}],
+						temperature: 0.1,
+						top_p: 0.8
+					};
+					BDFDB.LibraryRequires.request(apiEndpoint, {
+						method: "post",
+						headers: {
+							"Content-Type": "application/json",
+							"Authorization": `Bearer ${apiKey}`
+						},
+						body: JSON.stringify(requestData)
+					}, (error, response, body) => {
+						if (!error && body && response && response.statusCode == 200) {
+							try {
+								body = JSON.parse(body);
+								const content = body && body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content;
+								return resolve(this.parseAiBatchTranslationResponse(content));
+							}
+							catch (err) {return resolve(null);}
+						}
+						return resolve(null);
+					});
+				});
+			}
+
+			getNextHistoricalAiBatchFallbackLimit (itemCount) {
+				itemCount = Math.max(1, parseInt(itemCount, 10) || 1);
+				if (itemCount > 50) return 50;
+				if (itemCount > 25) return 25;
+				if (itemCount > 10) return 10;
+				return 1;
+			}
+
+			requeueHistoricalAiBatchFallbackItems (items, nextLimit = null) {
+				if (!items || !items.length) return;
+				const limit = nextLimit == null ? this.getNextHistoricalAiBatchFallbackLimit(items.length) : nextLimit;
+				for (let index = items.length - 1; index > -1; index--) {
+					const queueItem = items[index] && items[index].queueItem ? items[index].queueItem : items[index];
+					if (!queueItem) continue;
+					if (limit > 1) {
+						delete queueItem.forceSingle;
+						queueItem.aiBatchSizeLimit = limit;
+					}
+					else {
+						queueItem.forceSingle = true;
+						delete queueItem.aiBatchSizeLimit;
+					}
+					autoTranslationQueue.unshift(queueItem);
+				}
+			}
+
+			processHistoricalAutoTranslationBatchChunk () {
+				if (isBackgroundTranslating || isTranslating) return false;
+				const channelId = historicalAutoTranslationBatchChannelId || loadedAutoTranslationStatus.channelId || BDFDB.LibraryStores.SelectedChannelStore.getChannelId() || "__global";
+				const engineKey = this.getHistoricalAiBatchEngineKey(channelId);
+				if (!engineKey) return false;
+				const input = Object.assign({}, languages[this.getLanguageChoice(languageTypes.INPUT, messageTypes.RECEIVED, channelId)] || {});
+				const output = Object.assign({}, languages[this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.RECEIVED, channelId)] || {});
+				let requestItems = [], processedWithoutRequest = [], selectedIds = {}, charCount = 0;
+				const remainingQueue = [];
+				let activeBatchItemLimit = this.getHistoricalAiBatchItemLimit(channelId);
+				for (const queueItem of autoTranslationQueue) {
+					const itemChannelId = this.getHistoricalQueueItemChannelId(queueItem, channelId);
+					const eligible = queueItem && queueItem.historicalLoad && !queueItem.forceSingle && itemChannelId == channelId && this.isHistoricalAutoTranslationSnapshotMessage(queueItem.message && queueItem.message.id, channelId);
+					if (eligible && queueItem.aiBatchSizeLimit) activeBatchItemLimit = Math.max(1, Math.min(activeBatchItemLimit, queueItem.aiBatchSizeLimit));
+					if (!eligible || requestItems.length >= activeBatchItemLimit) {
+						remainingQueue.push(queueItem);
+						continue;
+					}
+					const prepared = this.prepareHistoricalAiBatchQueueItem(queueItem, channelId, input, output);
+					if (!prepared) {
+						remainingQueue.push(queueItem);
+						continue;
+					}
+					if (prepared.cachedTranslation || prepared.skipped) {
+						processedWithoutRequest.push(prepared);
+						selectedIds[queueItem.message.id] = true;
+						continue;
+					}
+					const nextCharCount = charCount + prepared.protectedText.length;
+					if (requestItems.length && nextCharCount > HISTORICAL_AI_BATCH_CHAR_LIMIT) {
+						remainingQueue.push(queueItem);
+						continue;
+					}
+					charCount = nextCharCount;
+					requestItems.push(prepared);
+					selectedIds[queueItem.message.id] = true;
+				}
+				autoTranslationQueue = remainingQueue;
+				const markProcessed = (queueItem, outcome = {}) => {
+					if (!queueItem || !queueItem.message) return;
+					delete queuedAutoTranslations[queueItem.message.id];
+					historicalAutoTranslationBatchProcessedCount++;
+					const statusUpdate = {active: true, collecting: false, done: false, channelId, batch: loadedAutoTranslationBatchNumbers[channelId] || loadedAutoTranslationStatus.batch || 1, total: historicalAutoTranslationBatchTotal || loadedAutoTranslationStatus.total || historicalAutoTranslationBatchProcessedCount, processed: historicalAutoTranslationBatchProcessedCount};
+					if (outcome.displayed) statusUpdate.displayed = (loadedAutoTranslationStatus.displayed || 0) + outcome.displayed;
+					if (outcome.skipped) statusUpdate.skipped = (loadedAutoTranslationStatus.skipped || 0) + outcome.skipped;
+					if (outcome.aiDropped) statusUpdate.aiDropped = (loadedAutoTranslationStatus.aiDropped || 0) + outcome.aiDropped;
+					if (outcome.reason) statusUpdate.lastSkipReason = outcome.reason;
+					if (outcome.preview) statusUpdate.lastSkipPreview = this.getLoadedAutoTranslationPreviewText(outcome.preview);
+					this.updateLoadedAutoTranslationStatus(statusUpdate);
+				};
+				for (const prepared of processedWithoutRequest) {
+					if (prepared.cachedTranslation) {
+						const storedCachedTranslation = Object.assign({channelId, auto: true}, prepared.cachedTranslation);
+						this.stageHistoricalAutoTranslationResult(prepared.queueItem.message, storedCachedTranslation, prepared.queueItem.originalContentData);
+					}
+					loadedAutoTranslationAttemptedMessages[prepared.queueItem.message.id] = channelId;
+					markProcessed(prepared.queueItem, prepared.cachedTranslation ? {displayed: 1} : {skipped: 1, reason: prepared.skipReason || "symbol_only", preview: prepared.skipPreview || this.buildTranslationRequestText(prepared.queueItem.originalContentData || prepared.originalContentData || {})});
+				}
+				if (!requestItems.length) {
+					this.finishHistoricalAutoTranslationBatchIfDone();
+					this.processAutoTranslationQueue();
+					return true;
+				}
+				isBackgroundTranslating = true;
+				this.requestAiBatchTranslation(engineKey, requestItems).then(resultMap => {
+					if (!resultMap) {
+						// JSON parsing/API failure: retry the same selected messages with smaller AI batches, then single-message fallback.
+						this.requeueHistoricalAiBatchFallbackItems(requestItems);
+						isBackgroundTranslating = false;
+						return this.processAutoTranslationQueue();
+					}
+					const fallbackItems = [];
+					for (const item of requestItems) {
+						const messageId = String(item.message.id);
+						const hasReturnedId = Object.prototype.hasOwnProperty.call(resultMap, messageId);
+						const rawTranslation = hasReturnedId ? resultMap[messageId] : null;
+						if (!hasReturnedId || rawTranslation == null || String(rawTranslation).trim() === "") {
+							fallbackItems.push(item.queueItem);
+							continue;
+						}
+						if (this.isSkipTranslationSignal(rawTranslation)) {
+							loadedAutoTranslationAttemptedMessages[item.message.id] = channelId;
+							this.persistReceivedSkipDecision(item.message.id, item.signature, "ai_skip_signal", this.buildTranslationRequestText(item.originalContentData));
+							markProcessed(item.queueItem, {skipped: 1, aiDropped: 1, reason: "ai_skip_signal", preview: this.buildTranslationRequestText(item.originalContentData)});
+							continue;
+						}
+						let translatedText = String(rawTranslation).replace(/\[NEWLINE\]/g, "\n").trim();
+						translatedText = this.addExceptions(translatedText, item.exceptions);
+						if (!this.isTranslationLikelyInTargetLanguage(translatedText, item.output && item.output.id)) {
+							loadedAutoTranslationAttemptedMessages[item.message.id] = channelId;
+							markProcessed(item.queueItem, {skipped: 1, aiDropped: 1, reason: "wrong_target_language", preview: translatedText || this.buildTranslationRequestText(item.originalContentData)});
+							continue;
+						}
+						const storedTranslation = this.createStoredReceivedTranslationData(item.message, channelId, item.originalContentData, item.signature, translatedText, item.input, item.output, true);
+						if (storedTranslation && this.shouldKeepAutoTranslatedResult(storedTranslation, channelId) && !this.isTranslationResultTooSimilar(storedTranslation)) {
+							this.stageHistoricalAutoTranslationResult(item.message, storedTranslation, item.originalContentData);
+							this.persistTranslationCacheEntry(item.message.id, item.signature, storedTranslation);
+							loadedAutoTranslationAttemptedMessages[item.message.id] = channelId;
+							markProcessed(item.queueItem, {displayed: 1});
+						}
+						else if (storedTranslation) {
+							loadedAutoTranslationAttemptedMessages[item.message.id] = channelId;
+							const rejectReason = this.getAutoTranslatedResultRejectReason(storedTranslation, channelId) || "local_guard";
+							this.persistReceivedSkipDecision(item.message.id, item.signature, rejectReason, storedTranslation.originalContent || storedTranslation.translatedContent);
+							markProcessed(item.queueItem, {skipped: 1, aiDropped: 1, reason: rejectReason, preview: storedTranslation.originalContent || storedTranslation.translatedContent});
+						}
+						else fallbackItems.push(item.queueItem);
+					}
+					this.requeueHistoricalAiBatchFallbackItems(fallbackItems, fallbackItems.length > 1 ? this.getNextHistoricalAiBatchFallbackLimit(fallbackItems.length) : 1);
+					isBackgroundTranslating = false;
+					this.finishHistoricalAutoTranslationBatchIfDone();
+					this.processAutoTranslationQueue();
+				}).catch(_ => {
+					this.requeueHistoricalAiBatchFallbackItems(requestItems);
+					isBackgroundTranslating = false;
+					this.processAutoTranslationQueue();
+				});
+				return true;
 			}
 
 			processAutoTranslationQueue () {
-				if (isBackgroundTranslating || isTranslating || !autoTranslationQueue.length) return;
-				const prioritizedIndex = autoTranslationQueue.findIndex(queueItem => queueItem && !queueItem.deferWhileReading);
-				if (prioritizedIndex > 0) autoTranslationQueue.unshift(autoTranslationQueue.splice(prioritizedIndex, 1)[0]);
+				if (historicalAutoTranslationStartTimer) {
+					clearTimeout(historicalAutoTranslationStartTimer);
+					historicalAutoTranslationStartTimer = null;
+				}
+				if (loadedAutoTranslationStatus.active && loadedAutoTranslationStatus.collecting) this.updateLoadedAutoTranslationStatus({collecting: false});
+				if (isBackgroundTranslating || isTranslating) return;
+				if (!autoTranslationQueue.length) {
+					this.finishHistoricalAutoTranslationBatchIfDone();
+					if (!historicalAutoTranslationBatchActive && loadedAutoTranslationStatus && loadedAutoTranslationStatus.active && this.getReceivedAutoTranslateScope() == "loaded_messages") {
+						const channelId = loadedAutoTranslationStatus.channelId || BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+						const total = Math.max(0, loadedAutoTranslationStatus.total || 0);
+						this.updateLoadedAutoTranslationStatus({active: false, collecting: false, done: true, channelId, total, processed: Math.min(total, loadedAutoTranslationStatus.processed || 0)});
+					}
+					return;
+				}
+				this.sortAutoTranslationQueueForStableOrder();
 				const nextItem = autoTranslationQueue.shift();
-				if (!nextItem || !nextItem.message) return this.processAutoTranslationQueue();
-				if (nextItem.historicalLoad && !this.isMessageWithinLoadedTimeWindow(nextItem.message)) {
-					delete queuedAutoTranslations[nextItem.message.id];
+				if (!nextItem || !nextItem.message) {
+					this.finishHistoricalAutoTranslationBatchIfDone();
 					return this.processAutoTranslationQueue();
 				}
-				if (nextItem.deferWhileReading && this.isViewingMessageHistory()) {
-					autoTranslationQueue.push(nextItem);
+				if (nextItem.historicalLoad) {
+					const nextChannelId = nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global";
+					if (!this.isTranslationEnabled(nextChannelId) || !this.isReceivedAutoTranslationEnabled(nextChannelId)) {
+						delete queuedAutoTranslations[nextItem.message.id];
+						this.clearLoadedAutoTranslationStatus();
+						isBackgroundTranslating = false;
+						return this.processAutoTranslationQueue();
+					}
+				}
+				if (nextItem.historicalLoad && !historicalAutoTranslationBatchActive) {
+					historicalAutoTranslationBatchActive = true;
+					historicalAutoTranslationBatchProcessedCount = 0;
+					const snapshot = this.createHistoricalAutoTranslationBatchSnapshot(nextItem);
+					const channelId = snapshot.channelId;
+					loadedAutoTranslationBatchNumbers[channelId] = (loadedAutoTranslationBatchNumbers[channelId] || 0) + 1;
+					this.updateLoadedAutoTranslationStatus({active: true, collecting: false, done: false, channelId, batch: loadedAutoTranslationBatchNumbers[channelId], total: snapshot.total || 1, processed: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""});
+				}
+				if (nextItem.historicalLoad && !this.isMessageWithinLoadedRange(nextItem.message)) {
+					delete queuedAutoTranslations[nextItem.message.id];
+					historicalAutoTranslationBatchProcessedCount++;
+					this.updateLoadedAutoTranslationStatus({processed: historicalAutoTranslationBatchProcessedCount, skipped: (loadedAutoTranslationStatus.skipped || 0) + 1, lastSkipReason: "out_of_range", lastSkipPreview: this.getLoadedAutoTranslationPreviewText(this.buildTranslationRequestText(nextItem.originalContentData))});
+					this.finishHistoricalAutoTranslationBatchIfDone();
+					return this.processAutoTranslationQueue();
+				}
+				if (nextItem.historicalLoad && this.shouldPauseHistoricalAutoTranslation()) {
+					autoTranslationQueue.unshift(nextItem);
 					this.scheduleAutoTranslationQueueRetry();
 					return;
 				}
+				if (nextItem.historicalLoad && !nextItem.forceSingle && this.getHistoricalAiBatchEngineKey(nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global")) {
+					autoTranslationQueue.unshift(nextItem);
+					if (this.processHistoricalAutoTranslationBatchChunk()) return;
+				}
+				if (nextItem.cachedTranslation) {
+					const channelId = nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global";
+					const storedCachedTranslation = Object.assign({channelId, auto: true}, nextItem.cachedTranslation);
+					if (nextItem.historicalLoad) {
+						this.stageHistoricalAutoTranslationResult(nextItem.message, storedCachedTranslation, nextItem.originalContentData);
+						loadedAutoTranslationAttemptedMessages[nextItem.message.id] = channelId;
+						historicalAutoTranslationBatchProcessedCount++;
+						this.updateLoadedAutoTranslationStatus({active: true, collecting: false, done: false, channelId, batch: loadedAutoTranslationBatchNumbers[channelId] || loadedAutoTranslationStatus.batch || 1, total: historicalAutoTranslationBatchTotal || loadedAutoTranslationStatus.total || historicalAutoTranslationBatchProcessedCount, processed: historicalAutoTranslationBatchProcessedCount, displayed: (loadedAutoTranslationStatus.displayed || 0) + 1});
+					}
+					else this.applyStoredTranslationToMessage(nextItem.message, storedCachedTranslation, nextItem.originalContentData);
+					delete queuedAutoTranslations[nextItem.message.id];
+					this.finishHistoricalAutoTranslationBatchIfDone();
+					return this.processAutoTranslationQueue();
+				}
 				if (!this.shouldAutoTranslateReceivedMessage(nextItem.message, nextItem.channel, nextItem.originalContentData, true)) {
 					delete queuedAutoTranslations[nextItem.message.id];
+					if (nextItem.historicalLoad) {
+						loadedAutoTranslationAttemptedMessages[nextItem.message.id] = nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global";
+						historicalAutoTranslationBatchProcessedCount++;
+						this.updateLoadedAutoTranslationStatus({processed: historicalAutoTranslationBatchProcessedCount, skipped: (loadedAutoTranslationStatus.skipped || 0) + 1, lastSkipReason: this.getReceivedAutoTranslateSkipReason(nextItem.originalContentData, nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global") || "local_guard", lastSkipPreview: this.getLoadedAutoTranslationPreviewText(this.buildTranslationRequestText(nextItem.originalContentData))});
+					}
+					this.finishHistoricalAutoTranslationBatchIfDone();
 					return this.processAutoTranslationQueue();
 				}
 				isBackgroundTranslating = true;
@@ -3877,10 +6655,30 @@ module.exports = (_ => {
 					auto: true,
 					silent: true,
 					trackBusy: false,
+					historicalLoad: !!nextItem.historicalLoad,
+					deferRerender: !!nextItem.historicalLoad,
+					stageResult: !!nextItem.historicalLoad,
 					originalContentData: nextItem.originalContentData
-				}).finally(_ => {
+				}).then(result => {
 					delete queuedAutoTranslations[nextItem.message.id];
+					if (nextItem.historicalLoad) {
+						const channelId = nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global";
+						if (result) loadedAutoTranslationAttemptedMessages[nextItem.message.id] = channelId;
+						historicalAutoTranslationBatchProcessedCount++;
+						this.updateLoadedAutoTranslationStatus({active: true, collecting: false, done: false, channelId, batch: loadedAutoTranslationBatchNumbers[channelId] || loadedAutoTranslationStatus.batch || 1, total: historicalAutoTranslationBatchTotal || loadedAutoTranslationStatus.total || historicalAutoTranslationBatchProcessedCount, processed: historicalAutoTranslationBatchProcessedCount, displayed: (loadedAutoTranslationStatus.displayed || 0) + (result ? 1 : 0), skipped: (loadedAutoTranslationStatus.skipped || 0) + (result ? 0 : 1), aiDropped: (loadedAutoTranslationStatus.aiDropped || 0) + (result ? 0 : 1), lastSkipReason: result ? loadedAutoTranslationStatus.lastSkipReason : "local_guard", lastSkipPreview: result ? loadedAutoTranslationStatus.lastSkipPreview : this.getLoadedAutoTranslationPreviewText(this.buildTranslationRequestText(nextItem.originalContentData))});
+					}
 					isBackgroundTranslating = false;
+					this.finishHistoricalAutoTranslationBatchIfDone();
+					this.processAutoTranslationQueue();
+				}).catch(_ => {
+					delete queuedAutoTranslations[nextItem.message.id];
+					if (nextItem.historicalLoad) {
+						const channelId = nextItem.channel && nextItem.channel.id || loadedAutoTranslationStatus.channelId || "__global";
+						historicalAutoTranslationBatchProcessedCount++;
+						this.updateLoadedAutoTranslationStatus({active: true, collecting: false, done: false, channelId, batch: loadedAutoTranslationBatchNumbers[channelId] || loadedAutoTranslationStatus.batch || 1, total: historicalAutoTranslationBatchTotal || loadedAutoTranslationStatus.total || historicalAutoTranslationBatchProcessedCount, processed: historicalAutoTranslationBatchProcessedCount, skipped: (loadedAutoTranslationStatus.skipped || 0) + 1, aiDropped: (loadedAutoTranslationStatus.aiDropped || 0) + 1, lastSkipReason: "local_guard", lastSkipPreview: this.getLoadedAutoTranslationPreviewText(this.buildTranslationRequestText(nextItem.originalContentData))});
+					}
+					isBackgroundTranslating = false;
+					this.finishHistoricalAutoTranslationBatchIfDone();
 					this.processAutoTranslationQueue();
 				});
 			}
@@ -3897,10 +6695,22 @@ module.exports = (_ => {
 				
 				translationEnabledStates = BDFDB.DataUtils.load(this, "translationEnabledStates");
 				translationEnabledStates = BDFDB.ArrayUtils.is(translationEnabledStates) ? translationEnabledStates : [];
+				receivedAutoTranslationEnabledStates = BDFDB.DataUtils.load(this, "receivedAutoTranslationEnabledStates");
+				receivedAutoTranslationEnabledStates = BDFDB.ArrayUtils.is(receivedAutoTranslationEnabledStates) ? receivedAutoTranslationEnabledStates : [].concat(translationEnabledStates);
 				autoTranslationQueue = [];
 				queuedAutoTranslations = {};
 				suppressedAutoTranslations = {};
+				this.clearLoadedAutoTranslationStatus();
 				isBackgroundTranslating = false;
+				historicalAutoTranslationBatchActive = false;
+				historicalAutoTranslationBatchProcessedCount = 0;
+				historicalAutoTranslationBatchMessageIds = {};
+				historicalAutoTranslationBatchChannelId = null;
+				historicalAutoTranslationBatchTotal = 0;
+				this.clearHistoricalAutoTranslationStaging();
+				loadedAutoTranslationPassScrollStamps = {};
+				loadedAutoTranslationPassRequestCounts = {};
+				loadedAutoTranslationAttemptedMessages = {};
 				autoTranslationChannelStates = {};
 				replyPreviewTranslations = {};
 				queuedReplyPreviewTranslations = {};
@@ -3909,6 +6719,10 @@ module.exports = (_ => {
 				translationRerenderTimer = null;
 				if (autoTranslationQueueRetryTimer) clearTimeout(autoTranslationQueueRetryTimer);
 				autoTranslationQueueRetryTimer = null;
+				if (historicalAutoTranslationStartTimer) clearTimeout(historicalAutoTranslationStartTimer);
+				historicalAutoTranslationStartTimer = null;
+				if (deferredSettingsRerenderTimer) clearTimeout(deferredSettingsRerenderTimer);
+				deferredSettingsRerenderTimer = null;
 				
 				this.setLanguages();
 				BDFDB.PatchUtils.forceAllUpdates(this);
@@ -3931,7 +6745,7 @@ module.exports = (_ => {
 							icon: translated ? translateIconUntranslate : translateIcon
 						}),
 						disabled: !translated && isTranslating,
-						action: _ => this.translateMessage(e.instance.props.message, e.instance.props.channel)
+						action: _ => this.translateMessage(e.instance.props.message, e.instance.props.channel, {manual: true, independentOfTextAreaSwitch: true})
 					}));
 					this.injectMessageLanguageActions(children, index > -1 ? index + 1 : 0, e.instance.props.message, e.instance.props.channel);
 					this.injectSearchItem(e, false);
@@ -4006,7 +6820,8 @@ module.exports = (_ => {
 				if (!this.settings.general.addQuickTranslateButton || !e.instance.props.message || !e.instance.props.channel) return;
 				let [children, index] = BDFDB.ReactUtils.findParent(e.returnvalue, {props: [["className", BDFDB.disCN.messagebuttons]]});
 				if (index == -1) return;
-				let translated = !!translatedMessages[e.instance.props.message.id];
+				const channelId = e.instance.props.channel && e.instance.props.channel.id || null;
+				let translated = !!this.getActiveMessageTranslation(e.instance.props.message, channelId);
 				children.unshift(BDFDB.ReactUtils.createElement(class extends BdApi.React.Component {
 					render() {
 						return BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TooltipContainer, {
@@ -4016,8 +6831,8 @@ module.exports = (_ => {
 							children: BDFDB.ReactUtils.createElement("div", {
 								className: BDFDB.disCNS.messagetoolbarhoverbutton + BDFDB.disCN.messagetoolbarbutton,
 								onClick: _ => {
-									if (!isTranslating) _this.translateMessage(e.instance.props.message, e.instance.props.channel).then(_ => {
-										translated = !!translatedMessages[e.instance.props.message.id];
+									if (!isTranslating) _this.translateMessage(e.instance.props.message, e.instance.props.channel, {manual: true, independentOfTextAreaSwitch: true}).then(_ => {
+										translated = !!_this.getActiveMessageTranslation(e.instance.props.message, channelId);
 										BDFDB.ReactUtils.forceUpdate(this);
 									});
 								},
@@ -4065,13 +6880,16 @@ module.exports = (_ => {
 							// Remove the prefix from the message
 							const cleanText = text.trim().substring(foundPrefix.length).trim();
 							
-							// Translate with the specific target language
-							this.translateText(cleanText, messageTypes.SENT, (translation, input, output) => {
-								// Override the output language with the one from the prefix
-								output = {id: targetLanguage, name: languages[targetLanguage] ? languages[targetLanguage].name : targetLanguage};
-								
-								translation = !translation ? cleanText : (this.settings.general.sendOriginalMessage ? (translation + this.formatOriginalTextForMessage(cleanText)) : translation);
-								e2.originalMethod(Object.assign({}, e2.methodArguments[0], {value: translation}));
+							this.shouldAutoTranslateSentMessage(cleanText, e.instance.props.channel.id, shouldTranslate => {
+								if (!shouldTranslate) return e2.originalMethod(Object.assign({}, e2.methodArguments[0], {value: cleanText}));
+								// Translate with the specific target language
+								this.translateText(cleanText, messageTypes.SENT, (translation, input, output) => {
+									// Override the output language with the one from the prefix
+									output = {id: targetLanguage, name: languages[targetLanguage] ? languages[targetLanguage].name : targetLanguage};
+									
+									translation = this.shouldSendOriginalInsteadOfSentTranslation(cleanText, translation, input, output) ? cleanText : (this.settings.general.sendOriginalMessage ? (translation + this.formatOriginalTextForMessage(cleanText)) : translation);
+									e2.originalMethod(Object.assign({}, e2.methodArguments[0], {value: translation}));
+								}, targetLanguage);
 							}, targetLanguage);
 							
 							return Promise.resolve({
@@ -4085,7 +6903,7 @@ module.exports = (_ => {
 							this.shouldAutoTranslateSentMessage(originalValue, e.instance.props.channel.id, shouldTranslate => {
 								if (!shouldTranslate) return e2.originalMethod(Object.assign({}, e2.methodArguments[0], {value: originalValue}));
 								this.translateText(originalValue, messageTypes.SENT, (translation, input, output) => {
-									translation = !translation ? originalValue : (this.settings.general.sendOriginalMessage ? (translation + this.formatOriginalTextForMessage(originalValue)) : translation);
+									translation = this.shouldSendOriginalInsteadOfSentTranslation(originalValue, translation, input, output) ? originalValue : (this.settings.general.sendOriginalMessage ? (translation + this.formatOriginalTextForMessage(originalValue)) : translation);
 									e2.originalMethod(Object.assign({}, e2.methodArguments[0], {value: translation}));
 								});
 							});
@@ -4098,17 +6916,27 @@ module.exports = (_ => {
 					return e2.callOriginalMethodAfterwards();
 				}}, {noCache: true});
 			}
-
+			
 			processChannelTextAreaEditor (e) {
-				if (this.isTranslationEnabled(e.instance.props.channel.id) && isTranslating) e.instance.props.disabled = true;
+				// Do not disable the text area while background/manual message translations are running.
+				// Disabling here interrupts draft typing and can drop unsent text during message list refreshes.
 			}
 			
 			processChannelTextAreaButtons (e) {
 				if (!this.settings.general.addTranslateButton || e.instance.props.disabled || e.instance.props.type != BDFDB.DiscordConstants.ChannelTextAreaTypes.NORMAL && e.instance.props.type != BDFDB.DiscordConstants.ChannelTextAreaTypes.SIDEBAR) return;
-				if (e.returnvalue) e.returnvalue.props.children.unshift(BDFDB.ReactUtils.createElement(TranslateButtonComponent, {
+				if (!e.returnvalue || !e.returnvalue.props) return;
+				let children = [].concat(e.returnvalue.props.children || []).filter(child => {
+					if (!child) return false;
+					if (child.key == `${this.name}-translate-textarea-button`) return false;
+					const className = child.props && typeof child.props.className == "string" ? child.props.className : "";
+					return !className.includes("_translatortranslatebutton");
+				});
+				children.unshift(BDFDB.ReactUtils.createElement(TranslateButtonComponent, {
+					key: `${this.name}-translate-textarea-button`,
 					guildId: e.instance.props.channel.guild_id ? e.instance.props.channel.guild_id : "@me",
 					channelId: e.instance.props.channel.id
 				}));
+				e.returnvalue.props.children = children;
 			}
 
 			processMessages (e) {
@@ -4117,8 +6945,12 @@ module.exports = (_ => {
 				const channelId = channel && channel.id;
 				this.prepareAutoTranslationChannelSession(channelId);
 				const channelState = this.getAutoTranslationChannelState(channelId);
-				const shouldInitializeAutoTranslation = !!(channelId && this.isTranslationEnabled(channelId) && channelState && !channelState.initialized);
+				const shouldInitializeAutoTranslation = !!(channelId && this.isReceivedAutoTranslationEnabled(channelId) && channelState && !channelState.initialized);
 				const historicalLoadedPass = shouldInitializeAutoTranslation && this.getReceivedAutoTranslateScope() == "loaded_messages";
+				if (historicalLoadedPass) {
+					this.attachAutoTranslationScrollWatcher();
+					this.updateLoadedAutoTranslationStatus({active: true, collecting: true, done: false, channelId, batch: (loadedAutoTranslationBatchNumbers[channelId] || 0) + 1, total: 0, processed: 0, displayed: 0, skipped: 0, aiDropped: 0, lastSkipReason: "", lastSkipPreview: ""});
+				}
 				const skipInitialLoadedMessages = shouldInitializeAutoTranslation && this.shouldDeferInitialAutoTranslate(channelId);
 				const autoTranslateBoundaryId = channelState ? channelState.boundaryMessageId : null;
 				let highestMessageId = autoTranslateBoundaryId;
@@ -4150,6 +6982,10 @@ module.exports = (_ => {
 					channelState.boundaryMessageId = this.getNewestMessageId(channelState.boundaryMessageId, highestMessageId);
 					if (shouldInitializeAutoTranslation) channelState.initialized = true;
 				}
+				if (historicalLoadedPass) {
+					const hasQueuedHistoricalForChannel = autoTranslationQueue.some(queueItem => queueItem && queueItem.historicalLoad && this.getHistoricalQueueItemChannelId(queueItem, channelId) == channelId);
+					if (!hasQueuedHistoricalForChannel && !historicalAutoTranslationBatchActive) this.updateLoadedAutoTranslationStatus({active: false, collecting: false, done: true, channelId, batch: loadedAutoTranslationBatchNumbers[channelId] || loadedAutoTranslationStatus.batch || 1, total: loadedAutoTranslationPassCounts[channelId] || 0, processed: 0});
+				}
 			}
 			
 			checkMessage (stream, message, channel, options = {}) {
@@ -4161,22 +6997,16 @@ module.exports = (_ => {
 				const channelState = this.getAutoTranslationChannelState(channelId);
 				const autoTranslateBoundaryId = options.autoTranslateBoundaryId != null ? options.autoTranslateBoundaryId : channelState && channelState.boundaryMessageId;
 				const isNewerThanBoundary = this.isMessageIdNewer(message.id, autoTranslateBoundaryId);
-				let translation = translatedMessages[message.id];
-				if (translation && translation.auto && !this.isTranslationEnabled(channelId)) {
-					delete translatedMessages[message.id];
-					delete suppressedAutoTranslations[message.id];
-					translation = null;
-				}
-				let messageChanged = false;
-				if (translation && translation.signature && translation.signature != expectedSignature) {
-					delete translatedMessages[message.id];
-					delete suppressedAutoTranslations[message.id];
-					translation = null;
-					messageChanged = true;
-				}
-				if (!translation && this.isTranslationEnabled(channelId) && !skipAutoQueue && (messageChanged || isNewerThanBoundary)) {
-					const cachedTranslation = this.getCachedReceivedTranslation(message, channelId, originalContentData);
-					if (cachedTranslation) translation = this.applyStoredTranslationToMessage(message, Object.assign({channelId, auto: true}, cachedTranslation), originalContentData);
+				const hadDisplayedTranslation = !!translatedMessages[message.id];
+				let translation = this.getActiveMessageTranslation(message, channelId, expectedSignature);
+				let messageChanged = hadDisplayedTranslation && !translation;
+				const canAutoTranslateMessage = this.isTranslationEnabled(channelId) && this.isReceivedAutoTranslationEnabled(channelId) && !suppressedAutoTranslations[message.id];
+				const canAutoTranslateReplyPreviewForBase = canAutoTranslateMessage && !skipAutoQueue && (options.historicalLoad ? this.isMessageWithinLoadedRange(message) : isNewerThanBoundary);
+				let cachedTranslation = null;
+				if (canAutoTranslateReplyPreviewForBase) this.markAutoTranslationEligibleReplyPreviewMessage(channelId, message.id);
+				if (!translation && canAutoTranslateMessage && !skipAutoQueue && (options.historicalLoad || messageChanged || isNewerThanBoundary)) {
+					cachedTranslation = this.getCachedReceivedTranslation(message, channelId, originalContentData);
+					if (cachedTranslation && !options.historicalLoad) translation = this.applyStoredTranslationToMessage(message, Object.assign({channelId, auto: true}, cachedTranslation), originalContentData);
 				}
 				if (translation) {
 					this.refreshTranslationDisplay(translation);
@@ -4188,72 +7018,72 @@ module.exports = (_ => {
 					delete oldMessages[message.id];
 					messageChanged = true;
 				}
-				if (!translation && !skipAutoQueue && this.isTranslationEnabled(channelId)) {
+				if (!translation && !skipAutoQueue && canAutoTranslateMessage) {
 					if (channelState) channelState.boundaryMessageId = this.getNewestMessageId(channelState.boundaryMessageId, message.id);
-					if (messageChanged || isNewerThanBoundary) this.queueAutoTranslateMessage(message, channel || {id: channelId}, originalContentData, {
-						historicalLoad: !!options.historicalLoad,
-						deferWhileReading: !!options.historicalLoad
-					});
+					if (messageChanged || isNewerThanBoundary || options.historicalLoad) {
+						const liveMessage = !options.historicalLoad && (isNewerThanBoundary || this.isLikelyLiveAutoTranslateMessage(message, channelId));
+						this.queueAutoTranslateMessage(message, channel || {id: channelId}, originalContentData, {
+							historicalLoad: !!options.historicalLoad && !liveMessage,
+							deferWhileReading: false,
+							cachedTranslation: !!options.historicalLoad && !liveMessage ? cachedTranslation : null
+						});
+					}
 				}
 			}
 
 			processMessageReply (e) {
 				if (!e.instance.props.referencedMessage || !e.instance.props.referencedMessage.message) return;
 				const referencedMessage = e.instance.props.referencedMessage.message;
-				const channelId = this.getMessageChannelId(e.instance.props.baseMessage);
-				const translationEnabled = this.isTranslationEnabled(channelId);
-				const deferInitialReplyPreviewTranslate = translationEnabled && this.shouldDeferInitialAutoTranslate(channelId);
-				let translation = translatedMessages[referencedMessage.id];
-				let fallbackContent = translationEnabled ? this.getReplyPreviewFallbackContent(referencedMessage) : (referencedMessage.content || "").trim();
-				if (!translationEnabled) {
-					const previewTranslation = replyPreviewTranslations[referencedMessage.id];
-					if (previewTranslation && previewTranslation.originalContent != null) fallbackContent = (previewTranslation.originalContent || "").trim();
-					delete replyPreviewTranslations[referencedMessage.id];
-					delete queuedReplyPreviewTranslations[referencedMessage.id];
-					if (translation) {
-						const normalizedTranslation = this.normalizeStoredTranslationData(translation);
-						const originalContent = normalizedTranslation.originalContent;
-						if (originalContent != null) fallbackContent = (originalContent || "").trim();
-						if (normalizedTranslation.auto) delete translatedMessages[referencedMessage.id];
-					}
-					translation = null;
-				}
-				if (!translation && translationEnabled) translation = this.getReplyPreviewTranslation(referencedMessage, channelId);
-				if (!translation && translationEnabled) {
-					const cachedTranslation = this.getCachedReceivedTranslation(referencedMessage, channelId);
-					if (cachedTranslation) {
-						translation = this.createReplyPreviewTranslationData(referencedMessage, channelId, cachedTranslation);
-						if (translation) replyPreviewTranslations[referencedMessage.id] = translation;
-					}
-					else if (!deferInitialReplyPreviewTranslate) this.queueReplyPreviewTranslation(referencedMessage, channelId);
-				}
+				const stableReferencedMessage = this.getStableReplyPreviewMessage(referencedMessage);
+				const channelId = this.getMessageChannelId(e.instance.props.baseMessage || stableReferencedMessage);
+				const fallbackContent = this.getReplyPreviewDisplayContentForMessage(stableReferencedMessage, channelId) || this.getReplyPreviewFallbackContent(stableReferencedMessage) || (stableReferencedMessage.content || "").trim();
 				e.instance.props.referencedMessage = Object.assign({}, e.instance.props.referencedMessage);
-				e.instance.props.referencedMessage.message = new BDFDB.DiscordObjects.Message(referencedMessage);
-				e.instance.props.referencedMessage.message.content = translation ? this.getReplyPreviewDisplayContent(translation) : fallbackContent;
+				const previewMessage = new BDFDB.DiscordObjects.Message(stableReferencedMessage);
+				previewMessage.content = fallbackContent;
+				this.markReplyPreviewRenderMessage(previewMessage);
+				e.instance.props.referencedMessage.message = previewMessage;
 				if (e.returnvalue && e.returnvalue.props) {
-					e.returnvalue = this.tagReplyPreviewRenderNode(e.returnvalue);
-					if (translation && translation.originalContent && /\n/.test(this.getReplyPreviewDisplayContent(translation))) e.returnvalue.props.className = BDFDB.DOMUtils.formatClassName(e.returnvalue.props.className, "translator-reply-preview-multiline");
+					e.returnvalue = this.wrapReplyPreviewJumpPause(this.stripTranslatorStylingFromReplyPreviewNode(e.returnvalue));
 				}
 			}
 
 			processMessageContent (e) {
 				if (!e.instance.props.message || !e.returnvalue || !e.returnvalue.props) return;
 				const message = e.instance.props.message;
+				if (this.isRenderingReplyPreviewMessage(message)) {
+					let children = this.ensureElementChildrenArray(e.returnvalue);
+					this.cleanupInjectedMessageChildren(children);
+					e.returnvalue = this.stripTranslatorStylingFromReplyPreviewNode(e.returnvalue);
+					return;
+				}
 				const channelId = this.getMessageChannelId(message);
-				let translation = translatedMessages[message.id];
-				if (translation && translation.auto && !this.isTranslationEnabled(channelId)) {
+				const hadDisplayedTranslation = !!translatedMessages[message.id];
+				let translation = this.getActiveMessageTranslation(message, channelId);
+				if (!translation && hadDisplayedTranslation) {
 					if (oldMessages[message.id]) {
 						e.instance.props.message = new BDFDB.DiscordObjects.Message(oldMessages[message.id]);
 						delete oldMessages[message.id];
 					}
-					delete translatedMessages[message.id];
-					delete suppressedAutoTranslations[message.id];
-					translation = null;
 				}
-				if (translation) this.refreshTranslationDisplay(translation);
+				if (!translation && this.getReceivedAutoTranslateScope() == "loaded_messages" && this.isTranslationEnabled(channelId) && this.isReceivedAutoTranslationEnabled(channelId) && !this.isOwnMessage(message) && !suppressedAutoTranslations[message.id] && !queuedAutoTranslations[message.id]) {
+					const originalContentData = this.extractOriginalContentData(message);
+					const cachedTranslation = this.getCachedReceivedTranslation(message, channelId, originalContentData);
+					const liveMessage = this.isLikelyLiveAutoTranslateMessage(message, channelId);
+					if (cachedTranslation && liveMessage) {
+						translation = this.applyStoredTranslationToMessage(message, Object.assign({channelId, auto: true}, cachedTranslation), originalContentData);
+					}
+					else if (cachedTranslation || this.shouldAutoTranslateReceivedMessage(message, {id: channelId}, originalContentData)) {
+						this.queueAutoTranslateMessage(message, {id: channelId}, originalContentData, {
+							historicalLoad: !liveMessage,
+							deferWhileReading: false,
+							cachedTranslation: !liveMessage ? cachedTranslation : null
+						});
+					}
+				}
 				let children = this.ensureElementChildrenArray(e.returnvalue);
 				this.cleanupInjectedMessageChildren(children);
-				if (translation && this.settings.general.protectQuotedText) {
+				const translationPlace = this.isOwnMessage(message) ? messageTypes.SENT : messageTypes.RECEIVED;
+				if (translation && this.shouldProtectWrappedTextForPlace(translationPlace)) {
 					e.returnvalue.props.children = this.highlightProtectedWrappedTextInNode(e.returnvalue.props.children, message.id);
 					children = this.ensureElementChildrenArray(e.returnvalue);
 				}
@@ -4274,18 +7104,12 @@ module.exports = (_ => {
 						})
 					})
 				}));
-				if (translation && translation.originalContent && this.settings.general.showOriginalMessage && this.settings.general.showOriginalDirectly) children.push(this.createOriginalMessageBlock(translation.originalContent));
+				if (translation && translation.originalContent && this.settings.general.showOriginalMessage && this.settings.general.showOriginalDirectly && !translation.contentIncludesOriginal) children.push(this.createOriginalMessageBlock(translation.originalContent));
 			}
 
 			processEmbed (e) {
 				if (!e.instance.props.embed || !e.instance.props.embed.message_id) return;
-				let translation = translatedMessages[e.instance.props.embed.message_id];
-				const channelId = this.getDisplayedTranslationChannelId(e.instance.props.embed.message_id);
-				if (translation && translation.auto && !this.isTranslationEnabled(channelId)) {
-					delete translatedMessages[e.instance.props.embed.message_id];
-					delete suppressedAutoTranslations[e.instance.props.embed.message_id];
-					translation = null;
-				}
+				let translation = this.getActiveMessageTranslation({id: e.instance.props.embed.message_id}, this.getDisplayedTranslationChannelId(e.instance.props.embed.message_id));
 				if (translation && Object.keys(translation.embeds).length) {
 					if (!e.returnvalue) e.instance.props.embed = Object.assign({}, e.instance.props.embed, {
 						rawDescription: translation.embeds[e.instance.props.embed.id].description,
@@ -4340,14 +7164,20 @@ module.exports = (_ => {
 				}
 			}
 			
+			getTranslationStateKey (channelId) {
+				return this.settings.general.usePerChatTranslation ? channelId : "global";
+			}
+
 			toggleTranslation (channelId) {
 				const wasEnabled = this.isTranslationEnabled(channelId);
-				if (!wasEnabled) translationEnabledStates.push(this.settings.general.usePerChatTranslation ? channelId : "global");
-				else BDFDB.ArrayUtils.remove(translationEnabledStates, this.settings.general.usePerChatTranslation ? channelId : "global", true);
+				const stateKey = this.getTranslationStateKey(channelId);
+				if (!wasEnabled) translationEnabledStates.push(stateKey);
+				else BDFDB.ArrayUtils.remove(translationEnabledStates, stateKey, true);
 				BDFDB.DataUtils.save(translationEnabledStates, this, "translationEnabledStates");
 				if (wasEnabled) {
-					this.clearDisplayedTranslations(this.settings.general.usePerChatTranslation ? channelId : null);
-					this.clearAutoTranslationQueue(this.settings.general.usePerChatTranslation ? channelId : null);
+					const targetChannelId = this.settings.general.usePerChatTranslation ? channelId : null;
+					this.clearDisplayedAutoTranslations(targetChannelId);
+					this.clearAutoTranslationQueue(targetChannelId);
 				}
 				this.resetAutoTranslationTracking();
 				this.scheduleTranslationRerender();
@@ -4355,7 +7185,26 @@ module.exports = (_ => {
 			}
 			
 			isTranslationEnabled (channelId) {
-				return translationEnabledStates.includes(this.settings.general.usePerChatTranslation ? channelId : "global");
+				return translationEnabledStates.includes(this.getTranslationStateKey(channelId));
+			}
+
+			toggleReceivedAutoTranslation (channelId) {
+				const wasEnabled = this.isReceivedAutoTranslationEnabled(channelId);
+				const stateKey = this.getTranslationStateKey(channelId);
+				if (!wasEnabled) receivedAutoTranslationEnabledStates.push(stateKey);
+				else BDFDB.ArrayUtils.remove(receivedAutoTranslationEnabledStates, stateKey, true);
+				BDFDB.DataUtils.save(receivedAutoTranslationEnabledStates, this, "receivedAutoTranslationEnabledStates");
+				if (wasEnabled) {
+					this.clearDisplayedAutoTranslations(this.settings.general.usePerChatTranslation ? channelId : null);
+					this.clearAutoTranslationQueue(this.settings.general.usePerChatTranslation ? channelId : null);
+				}
+				this.resetAutoTranslationTracking();
+				this.scheduleTranslationRerender();
+				this.processAutoTranslationQueue();
+			}
+
+			isReceivedAutoTranslationEnabled (channelId) {
+				return receivedAutoTranslationEnabledStates.includes(this.getTranslationStateKey(channelId));
 			}
 
 			setLanguages () {
@@ -4465,6 +7314,85 @@ module.exports = (_ => {
 				return `\n> ${originalText.split("\n").join("\n> ")}`;
 			}
 
+			getCustomEmojiAssetUrl (emojiId, animated = false) {
+				if (!emojiId) return "";
+				return `https://cdn.discordapp.com/emojis/${emojiId}.${animated ? "gif" : "webp"}?size=40&quality=lossless`;
+			}
+
+			createDiscordMarkupDisplayNode (token, key) {
+				if (!token) return token;
+				let match = /^<(a?):([A-Za-z0-9_~]+):(\d+)>$/.exec(token);
+				if (match) {
+					const animated = match[1] == "a";
+					const emojiName = match[2];
+					const emojiId = match[3];
+					return BDFDB.ReactUtils.createElement("img", {
+						key,
+						className: "translator-discord-emoji",
+						src: this.getCustomEmojiAssetUrl(emojiId, animated),
+						alt: `:${emojiName}:`,
+						title: `:${emojiName}:`,
+						draggable: false
+					});
+				}
+				match = /^<@!?(\d+)>$/.exec(token);
+				if (match) {
+					const displayName = this.getMentionDisplayName(match[1]) || "user";
+					return BDFDB.ReactUtils.createElement("span", {
+						key,
+						className: "translator-discord-mention",
+						children: `@${displayName}`
+					});
+				}
+				match = /^<@&(\d+)>$/.exec(token);
+				if (match) {
+					let roleName = "role";
+					try {
+						const guildId = BDFDB.LibraryStores.SelectedGuildStore && BDFDB.LibraryStores.SelectedGuildStore.getGuildId && BDFDB.LibraryStores.SelectedGuildStore.getGuildId();
+						const role = guildId && BDFDB.LibraryStores.GuildStore && BDFDB.LibraryStores.GuildStore.getRole && BDFDB.LibraryStores.GuildStore.getRole(guildId, match[1]);
+						if (role && role.name) roleName = role.name;
+					}
+					catch (err) {}
+					return BDFDB.ReactUtils.createElement("span", {
+						key,
+						className: "translator-discord-mention translator-discord-role-mention",
+						children: `@${roleName}`
+					});
+				}
+				match = /^<#(\d+)>$/.exec(token);
+				if (match) {
+					let channelName = "channel";
+					try {
+						const channel = BDFDB.LibraryStores.ChannelStore && BDFDB.LibraryStores.ChannelStore.getChannel && BDFDB.LibraryStores.ChannelStore.getChannel(match[1]);
+						if (channel && channel.name) channelName = channel.name;
+					}
+					catch (err) {}
+					return BDFDB.ReactUtils.createElement("span", {
+						key,
+						className: "translator-discord-mention translator-discord-channel-mention",
+						children: `#${channelName}`
+					});
+				}
+				return token;
+			}
+
+			renderDiscordMarkupText (text, keyPrefix = "discord-markup") {
+				if (text == null) return "";
+				text = String(text);
+				const nodes = [];
+				const tokenRegex = /(<a?:[A-Za-z0-9_~]+:\d+>|<@!?\d+>|<@&\d+>|<#\d+>)/g;
+				let lastIndex = 0;
+				let match;
+				let index = 0;
+				while ((match = tokenRegex.exec(text))) {
+					if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
+					nodes.push(this.createDiscordMarkupDisplayNode(match[0], `${keyPrefix}-${index++}`));
+					lastIndex = match.index + match[0].length;
+				}
+				if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+				return nodes;
+			}
+
 			createOriginalMessageBlock (originalText) {
 				if (!originalText) return null;
 				return BDFDB.ReactUtils.createElement("div", {
@@ -4472,7 +7400,7 @@ module.exports = (_ => {
 					className: "translator-original-message",
 					children: BDFDB.ReactUtils.createElement("span", {
 						className: this.shouldUseSpoilerInReceivedOriginal() ? "translator-original-spoiler" : null,
-						children: originalText
+						children: this.renderDiscordMarkupText(originalText, "translator-original")
 					})
 				});
 			}
@@ -4544,41 +7472,84 @@ module.exports = (_ => {
 				});
 			}
 
-			shouldAutoTranslateSentMessage (text, channelId, callback) {
-				const sourceLanguages = this.getAutoTranslateSourceLanguages();
-				if (!sourceLanguages.length) return callback(true);
+			shouldSkipSentTranslationForSameTarget (text, channelId, forcedOutputLanguage = null, callback) {
+				const targetLanguageId = forcedOutputLanguage || this.getLanguageChoice(languageTypes.OUTPUT, messageTypes.SENT, channelId);
+				const targetLanguage = targetLanguageId && languages[targetLanguageId];
+				if (!targetLanguageId || targetLanguageId == "auto" || targetLanguage && targetLanguage.special) return callback(false, null);
 				const configuredInputLanguage = this.getLanguageChoice(languageTypes.INPUT, messageTypes.SENT, channelId);
-				if (configuredInputLanguage && configuredInputLanguage != "auto") return callback(this.matchesConfiguredSourceLanguage(configuredInputLanguage, sourceLanguages));
-				this.detectLanguage(text, detectedLanguage => callback(this.matchesConfiguredSourceLanguage(detectedLanguage, sourceLanguages)));
+				if (configuredInputLanguage && configuredInputLanguage != "auto") return callback(this.isSameLanguageOrVariant(configuredInputLanguage, targetLanguageId), configuredInputLanguage);
+				const analysis = this.analyzeTextForAutoTranslate(text, targetLanguageId);
+				if (this.isMostlyTargetLanguageMessage(analysis, targetLanguageId)) return callback(true, targetLanguageId);
+				this.detectLanguage(text, detectedLanguage => callback(!!detectedLanguage && this.isSameLanguageOrVariant(detectedLanguage, targetLanguageId), detectedLanguage));
+			}
+
+			shouldSendOriginalInsteadOfSentTranslation (originalText, translation, input, output) {
+				if (!translation) return true;
+				if (input && output && input.id && output.id && this.isSameLanguageOrVariant(input.id, output.id)) return true;
+				return this.getTextSimilarityScore(originalText, translation) >= Math.max(0.94, this.getTranslationSimilarityThreshold());
+			}
+
+			shouldAutoTranslateSentMessage (text, channelId, callback, forcedOutputLanguage = null) {
+				this.shouldSkipSentTranslationForSameTarget(text, channelId, forcedOutputLanguage, (sameLanguage, detectedLanguage) => {
+					if (sameLanguage) return callback(false);
+					const sourceLanguages = this.getAutoTranslateSourceLanguages();
+					if (!sourceLanguages.length) return callback(true);
+					const configuredInputLanguage = this.getLanguageChoice(languageTypes.INPUT, messageTypes.SENT, channelId);
+					if (configuredInputLanguage && configuredInputLanguage != "auto") return callback(this.matchesConfiguredSourceLanguage(configuredInputLanguage, sourceLanguages));
+					if (detectedLanguage) return callback(this.matchesConfiguredSourceLanguage(detectedLanguage, sourceLanguages));
+					this.detectLanguage(text, detectedLanguageId => callback(this.matchesConfiguredSourceLanguage(detectedLanguageId, sourceLanguages)));
+				});
 			}
 
 			translateMessage (message, channel, options = {}) {
 				return new Promise(callback => {
 					if (!message) return callback(null);
-					if (translatedMessages[message.id]) {
+					const channelId = channel && channel.id || BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
+					const isManualTranslation = !!options.manual || (!options.auto && !options.historicalLoad && !options.stageResult && !options.deferRerender);
+					if (isManualTranslation) this.lockManualTranslationScroll(message.id);
+					const activeTranslation = this.getActiveMessageTranslation(message, channelId);
+					if (activeTranslation) {
 						if (options.auto) return callback(false);
 						suppressedAutoTranslations[message.id] = true;
-						delete translatedMessages[message.id];
+						this.clearDisplayedTranslationState(message.id, {
+							clearReplyPreview: true,
+							preserveSuppressed: true
+						});
 						this.scheduleTranslationRerender();
 						callback(false);
 					}
 					else {
-						const channelId = channel && channel.id || BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
-						if (options.auto && !this.isTranslationEnabled(channelId)) return callback(false);
-						const originalContentData = options.originalContentData || this.extractOriginalContentData(message);
+						if (options.auto && !this.isReceivedAutoTranslationEnabled(channelId)) return callback(false);
+						const originalContentData = options.originalContentData || this.extractOriginalContentData(message, {ignoreReferencedPreview: isManualTranslation});
 						if (!this.hasTranslatableMessageContent(originalContentData)) return callback(false);
+						const shouldStageResult = !!(options.stageResult || options.historicalLoad || options.deferRerender);
+						if (this.shouldSkipReceivedTranslationBeforeRequest(originalContentData, channelId)) {
+							const skipReason = this.getReceivedAutoTranslateSkipReason(originalContentData, channelId) || "same_language";
+							this.persistReceivedSkipDecision(message.id, this.createReceivedTranslationSignature(message, channelId, originalContentData), skipReason, this.buildTranslationRequestText(originalContentData));
+							return callback(false);
+						}
 						const signature = this.createReceivedTranslationSignature(message, channelId, originalContentData);
 						const cachedTranslation = this.getCachedReceivedTranslation(message, channelId, originalContentData);
 						if (cachedTranslation) {
-							this.applyStoredTranslationToMessage(message, Object.assign({channelId, auto: !!options.auto}, cachedTranslation), originalContentData);
-							this.scheduleTranslationRerender({batched: options.auto || options.silent});
+							const storedCachedTranslation = Object.assign({}, cachedTranslation, {
+								channelId,
+								auto: !!options.auto,
+								manual: isManualTranslation,
+								independentOfTextAreaSwitch: !!options.independentOfTextAreaSwitch
+							});
+							if (shouldStageResult) {
+								this.stageHistoricalAutoTranslationResult(message, storedCachedTranslation, originalContentData);
+								return callback(true);
+							}
+							this.applyStoredTranslationToMessage(message, storedCachedTranslation, originalContentData);
+							this.scheduleTranslationRerender({batched: options.auto || options.silent, deferHistorical: !!options.deferRerender});
 							return callback(true);
 						}
 						const allTextsToTranslate = this.buildTranslationRequestText(originalContentData);
 						message.embeds.forEach(embed => embed.message_id = message.id);
 						let embedIds = message.embeds.map(embed => embed.id);
-						this.translateText(allTextsToTranslate, messageTypes.RECEIVED, (translation, input, output) => {
-							if (options.auto && !this.isTranslationEnabled(channelId)) return callback(false);
+						this.translateText(allTextsToTranslate, messageTypes.RECEIVED, (translation, input, output, meta = {}) => {
+							if (options.auto && !this.isReceivedAutoTranslationEnabled(channelId)) return callback(false);
 							if (translation) {
 								let strings = translation.split(/\n{0,1}__________________ __________________ __________________\n{0,1}/);
 								let oldContent = (originalContentData.content || "").trim();
@@ -4603,6 +7574,8 @@ module.exports = (_ => {
 									signature,
 									channelId,
 									auto: !!options.auto,
+									manual: isManualTranslation,
+									independentOfTextAreaSwitch: !!options.independentOfTextAreaSwitch,
 									content: content,
 									translatedContent,
 									originalContent: oldContent,
@@ -4610,12 +7583,22 @@ module.exports = (_ => {
 									input,
 									output
 								};
-								if (options.auto && !this.shouldKeepAutoTranslatedResult(storedTranslation, channelId)) return callback(false);
-								this.applyStoredTranslationToMessage(message, storedTranslation, originalContentData);
+								const rejectReason = this.getAutoTranslatedResultRejectReason(storedTranslation, channelId);
+								if ((options.auto && rejectReason) || this.isTranslationResultTooSimilar(storedTranslation)) {
+										this.persistReceivedSkipDecision(message.id, signature, rejectReason || "too_similar", storedTranslation.originalContent || storedTranslation.translatedContent);
+										return callback(false);
+									}
+								if (shouldStageResult) this.stageHistoricalAutoTranslationResult(message, storedTranslation, originalContentData);
+								else {
+									this.applyStoredTranslationToMessage(message, storedTranslation, originalContentData);
+									this.scheduleTranslationRerender({batched: options.auto || options.silent, deferHistorical: !!options.deferRerender});
+								}
 								this.persistTranslationCacheEntry(message.id, signature, storedTranslation);
-								this.scheduleTranslationRerender({batched: options.auto || options.silent});
 							}
-							callback(true);
+							else if (meta && meta.skipped && options.auto) {
+								this.persistReceivedSkipDecision(message.id, signature, "ai_skip_signal", allTextsToTranslate);
+							}
+							callback(!!translation || !!(meta && meta.skipped));
 						}, null, {
 							showToast: !options.silent,
 							showFailureToast: !options.silent,
@@ -4637,9 +7620,14 @@ module.exports = (_ => {
 					
 					if (finished) return;
 					finished = true;
-					if (translation) translation = this.addExceptions(translation, excepts);
-					callback(translation == text ? "" : translation, input, output);
+					if (this.isSkipTranslationSignal(translation)) return callback("", input, output, {skipped: true});
+					if (translation) {
+						translation = this.addExceptions(translation, excepts);
+						if (!this.isTranslationLikelyInTargetLanguage(translation, output && output.id)) return callback("", input, output, {failed: true, wrongTargetLanguage: true});
+					}
+					callback(translation == text ? "" : translation, input, output, {failed: !translation});
 				};
+				// Bottom-layer protection is shared by AI and traditional engines: only protected placeholders are sent for mentions/emoji/links/code.
 				let [newText, excepts, translate] = this.removeExceptions(text.trim(), place);
 				let channelId = options.channelId || BDFDB.LibraryStores.SelectedChannelStore.getChannelId();
 				let input = Object.assign({}, languages[this.getLanguageChoice(languageTypes.INPUT, place, channelId)]);
@@ -4679,8 +7667,9 @@ module.exports = (_ => {
 								position: "center",
 								onClose: _ => BDFDB.TimeUtils.clear(toastInterval)
 							});
+							const timeoutTicks = Math.max(40, Math.min(120, Math.ceil((newText || "").length / 25)));
 							toastInterval = BDFDB.TimeUtils.interval((_, count) => {
-								if (count < 40) return;
+								if (count < timeoutTicks) return;
 								finishTranslation("");
 								if (showFailureToast) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed} (${translationEngines[engine].name}) - ${this.labels.toast_translating_tryanother}`, {
 									type: "danger",
@@ -4690,17 +7679,17 @@ module.exports = (_ => {
 						};
 						if (this.validTranslator(this.settings.engines.translator, input, output, specialCase)) {
 							startTranslating(this.settings.engines.translator);
-							this[translationEngines[this.settings.engines.translator].funcName].apply(this, [{input, output, text: newText, specialCase, engine: translationEngines[this.settings.engines.translator]}, translation => {
+							this[translationEngines[this.settings.engines.translator].funcName].apply(this, [{input, output, text: newText, specialCase, engine: translationEngines[this.settings.engines.translator], autoDecision: !!(options.auto && place == messageTypes.RECEIVED && this.shouldUseAiAutoTranslateDecision() && this.supportsAiAutoTranslateDecisionEngine(this.settings.engines.translator)), decisionPrompt: this.getAiAutoTranslatePrompt({input, output})}, translation => {
 								if (!translation && this.validTranslator(this.settings.engines.backup, input, output, specialCase)) {
 									startTranslating(this.settings.engines.backup);
-									this[translationEngines[this.settings.engines.backup].funcName].apply(this, [{input, output, text: newText, specialCase, engine: translationEngines[this.settings.engines.backup]}, finishTranslation]);
+									this[translationEngines[this.settings.engines.backup].funcName].apply(this, [{input, output, text: newText, specialCase, engine: translationEngines[this.settings.engines.backup], autoDecision: !!(options.auto && place == messageTypes.RECEIVED && this.shouldUseAiAutoTranslateDecision() && this.supportsAiAutoTranslateDecisionEngine(this.settings.engines.backup)), decisionPrompt: this.getAiAutoTranslatePrompt({input, output})}, finishTranslation]);
 								}
 								else finishTranslation(translation);
 							}]);
 						}
 						else if (this.validTranslator(this.settings.engines.backup, input, output, specialCase)) {
 							startTranslating(this.settings.engines.backup);
-							this[translationEngines[this.settings.engines.backup].funcName].apply(this, [{input, output, text: newText, specialCase, engine: translationEngines[this.settings.engines.backup]}, finishTranslation]);
+							this[translationEngines[this.settings.engines.backup].funcName].apply(this, [{input, output, text: newText, specialCase, engine: translationEngines[this.settings.engines.backup], autoDecision: !!(options.auto && place == messageTypes.RECEIVED && this.shouldUseAiAutoTranslateDecision() && this.supportsAiAutoTranslateDecisionEngine(this.settings.engines.backup)), decisionPrompt: this.getAiAutoTranslatePrompt({input, output})}, finishTranslation]);
 						}
 						else finishTranslation();
 					}
@@ -5211,17 +8200,34 @@ module.exports = (_ => {
 				const apiEndpoint = this.normalizeApiEndpoint("deepseek", authKeys.deepseek && authKeys.deepseek.endpoint || translationEngines.deepseek.endpoint);
 				const modelId = authKeys.deepseek && authKeys.deepseek.model || translationEngines.deepseek.model;
 
+				const decisionInstruction = data.autoDecision ? `
+				Auto-translate decision rules:
+				${data.decisionPrompt || ""}
+				If the message should not be translated, return exactly ${AI_SKIP_TRANSLATION_TOKEN}.
+				` : "";
+
+				const targetLanguageName = data.output.name || data.output.id;
+				const translationModeInstruction = data.autoDecision ? `
+				Auto-translate mode: translate only natural-language content that is not already in ${targetLanguageName}; already-target-language content may stay unchanged according to the decision rules.
+				` : `
+				Manual translation mode: translate the entire natural-language message into ${targetLanguageName}. Do not keep non-target natural-language text as-is. Preserve only URLs, code, mentions, emoji, IDs, and protected placeholders.
+				`;
+
 				const translationPrompt = `
-				You are a professional localization expert. Translate the following ${data.input.auto ? "" : data.input.name + " "}content to ${data.output.name} following these rules:
+				You are a professional localization expert. The target language is exactly ${targetLanguageName}. Do not infer the target language from the source text or from existing bilingual/spoiler content.
+				${translationModeInstruction}
+				Rules:
 				1. Return ONLY the translation without any explanations
-				2. Use natural, fluent language
-				3. Maintain consistent terminology for technical/game terms  
-				4. Preserve the original tone and style
-				5. Use concise sentence structures
-				6. Handle numbers/units/proper nouns correctly
-				7. Use community-approved expressions for game content
-				8. Convert [NEWLINE] markers to actual line breaks (don't show them literally)
-				
+				2. Output language must be exactly ${targetLanguageName}; do not output any other language except preserved protected content
+				3. Use natural, fluent language
+				4. Maintain consistent terminology for technical/game terms
+				5. Keep proper nouns/product/game/model names as-is by default; use official/common names in ${targetLanguageName} when clearly established
+				6. Preserve the original tone and style
+				7. Do not omit any source content, including short interjections, laughter, particles, repeated words, or standalone short lines; translate or preserve them naturally in the target language.
+				8. Use concise sentence structures
+				9. Convert [NEWLINE] markers to actual line breaks (don't show them literally)
+				10. Preserve placeholders like ⟦0⟧, ⟦1⟧ exactly; they are protected mentions/links/emoji/code.
+				${decisionInstruction}
 				Text to translate:
 				${data.text.replace(/\n/g, " [NEWLINE] ").replace(/\s+/g, " ")}
 				`;
@@ -5230,7 +8236,7 @@ module.exports = (_ => {
 					model: modelId,
 					messages: [{
 						role: "system",
-						content: "You are a senior bilingual localization specialist"
+						content: data.autoDecision ? "You are a senior bilingual localization specialist and Discord chat translation decision assistant" : "You are a senior bilingual localization specialist"
 					}, {
 						role: "user",
 						content: translationPrompt
@@ -5289,17 +8295,34 @@ module.exports = (_ => {
 				const apiEndpoint = this.normalizeApiEndpoint("oaicompat", authKeys.oaicompat && authKeys.oaicompat.endpoint || translationEngines.oaicompat.endpoint);
 				const modelId = authKeys.oaicompat && authKeys.oaicompat.model || translationEngines.oaicompat.model;
 
-				const translationPrompt = `
-				You are a professional localization expert. Translate the following ${data.input.auto ? "" : data.input.name + " "}content to ${data.output.name} following these rules:
-				1. Return ONLY the translation without any explanations
-				2. Use natural, fluent language
-				3. Maintain consistent terminology for technical/game terms
-				4. Preserve the original tone and style
-				5. Use concise sentence structures
-				6. Handle numbers/units/proper nouns correctly
-				7. Use community-approved expressions for game content
-				8. Convert [NEWLINE] markers to actual line breaks (don't show them literally)
+				const decisionInstruction = data.autoDecision ? `
+				Auto-translate decision rules:
+				${data.decisionPrompt || ""}
+				If the message should not be translated, return exactly ${AI_SKIP_TRANSLATION_TOKEN}.
+				` : "";
 
+				const targetLanguageName = data.output.name || data.output.id;
+				const translationModeInstruction = data.autoDecision ? `
+				Auto-translate mode: translate only natural-language content that is not already in ${targetLanguageName}; already-target-language content may stay unchanged according to the decision rules.
+				` : `
+				Manual translation mode: translate the entire natural-language message into ${targetLanguageName}. Do not keep non-target natural-language text as-is. Preserve only URLs, code, mentions, emoji, IDs, and protected placeholders.
+				`;
+
+				const translationPrompt = `
+				You are a professional localization expert. The target language is exactly ${targetLanguageName}. Do not infer the target language from the source text or from existing bilingual/spoiler content.
+				${translationModeInstruction}
+				Rules:
+				1. Return ONLY the translation without any explanations
+				2. Output language must be exactly ${targetLanguageName}; do not output any other language except preserved protected content
+				3. Use natural, fluent language
+				4. Maintain consistent terminology for technical/game terms
+				5. Keep proper nouns/product/game/model names as-is by default; use official/common names in ${targetLanguageName} when clearly established
+				6. Preserve the original tone and style
+				7. Do not omit any source content, including short interjections, laughter, particles, repeated words, or standalone short lines; translate or preserve them naturally in the target language.
+				8. Use concise sentence structures
+				9. Convert [NEWLINE] markers to actual line breaks (don't show them literally)
+				10. Preserve placeholders like ⟦0⟧, ⟦1⟧ exactly; they are protected mentions/links/emoji/code.
+				${decisionInstruction}
 				Text to translate:
 				${data.text.replace(/\n/g, " [NEWLINE] ").replace(/\s+/g, " ")}
 				`;
@@ -5308,7 +8331,7 @@ module.exports = (_ => {
 					model: modelId,
 					messages: [{
 						role: "system",
-						content: "You are a senior bilingual localization specialist"
+						content: data.autoDecision ? "You are a senior bilingual localization specialist and Discord chat translation decision assistant" : "You are a senior bilingual localization specialist"
 					}, {
 						role: "user",
 						content: translationPrompt
@@ -5731,10 +8754,27 @@ module.exports = (_ => {
 				return (string || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 			}
 
+			getExceptionScopeSetting (key, fallback = true) {
+				const exceptions = this.settings && this.settings.exceptions || {};
+				return exceptions[key] == null ? !!fallback : !!exceptions[key];
+			}
+
+			shouldProtectConfiguredTermsForPlace (place) {
+				return place == messageTypes.SENT ? this.getExceptionScopeSetting("protectedTermsForSent", true) : this.getExceptionScopeSetting("protectedTermsForReceived", true);
+			}
+
+			shouldProtectWrappedTextForPlace (place) {
+				return place == messageTypes.SENT ? this.getExceptionScopeSetting("wrapperPairsForSent", true) : this.getExceptionScopeSetting("wrapperPairsForReceived", true);
+			}
+
 			getProtectedTermsList () {
 				let protectedTerms = BDFDB.ArrayUtils.is(this.settings.exceptions.protectedTerms) ? this.settings.exceptions.protectedTerms : [];
 				return [...new Set(protectedTerms.map(term => (term || "").trim()).filter(Boolean))].sort((termA, termB) => termB.length - termA.length);
 			}
+
+			// No hidden built-in term dictionary here. User-visible custom protected terms are handled by getProtectedTermsList().
+			// Automatic protection below is limited to structural patterns only, such as URLs, files, versions,
+			// repository paths, commands, variables and code-like identifiers.
 
 			trimTrailingProtectedPunctuation (text) {
 				if (!text) return {protectedText: text, trailingText: ""};
@@ -5767,7 +8807,7 @@ module.exports = (_ => {
 					hasMatch = true;
 					nextString += string.slice(lastIndex, match.index);
 					excepts[count] = protectedText;
-					nextString += `{{${count++}}}${trailingText}`;
+					nextString += `${this.createProtectionPlaceholder(count++)}${trailingText}`;
 					lastIndex = match.index + fullMatch.length;
 					if (!regex.global) break;
 				}
@@ -5803,10 +8843,22 @@ module.exports = (_ => {
 				excepts = result.excepts;
 				count = result.count;
 
-				result = this.protectRegexMatches(string, /\b(?:chatgpt(?:\s+(?:plus|pro|team|enterprise|edu|go))?|gpt(?:-[a-z0-9.]+)?|deepseek(?:[-\s][a-z0-9.]+)*|claude(?:[-\s]\d+(?:\.\d+)?)?(?:[-\s](?:haiku|sonnet|opus))?|gemini(?:[-\s]\d+(?:\.\d+)?)?(?:[-\s](?:flash|pro|ultra))?|qwen(?:[-\s]?\d+(?:\.\d+)?(?:-[a-z0-9]+)*)?|llama(?:[-\s]\d+(?:\.\d+)?)?(?:[-\s]\d+b)?|mistral(?:[-\s][a-z0-9.]+)*|mixtral(?:[-\s][a-z0-9.]+)*|grok(?:[-\s]\d+(?:\.\d+)?)?|sdxl|flux(?:\.\d+)?(?:[-\s][a-z0-9]+)*|perplexity(?:\s+sonar)?|kimi(?:\s*k\d+(?:\.\d+)?)?|doubao|hunyuan|ernie(?:[-\s][a-z0-9.]+)*|glm(?:-\d+)?(?:-[a-z0-9.]+)*|cogview(?:-\d+)?|wanx(?:[-\s][a-z0-9.]+)*|whisper|sora|dall(?:-| )?e(?:\s*\d+)?|stable[-\s]diffusion)(?=$|[^A-Za-z0-9_])/gi, excepts, count, {
-					normalize: fullMatch => this.trimTrailingProtectedPunctuation(fullMatch)
+				result = this.protectRegexMatches(string, /\b(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?\b/g, excepts, count);
+				string = result.string;
+				excepts = result.excepts;
+				count = result.count;
+
+				string = string.replace(/(^|\s)(\/[A-Za-z][A-Za-z0-9_-]{1,32})(?=\s|$)/g, (fullMatch, leading, command) => {
+					excepts[count] = command;
+					return `${leading || ""}${this.createProtectionPlaceholder(count++)}`;
 				});
-				return result;
+
+				return {string, excepts, count};
+			}
+
+			protectDiscordMarkupSegments (string, excepts = {}, count = 0) {
+				if (!string) return {string, excepts, count};
+				return this.protectRegexMatches(string, /<a?:[A-Za-z0-9_~]+:\d+>|<@[!&]?\d+>|<#\d+>|<@&\d+>|<t:\d+(?::[tTdDfFR])?>/g, excepts, count);
 			}
 
 			protectQuotedTextSegments (string, excepts = {}, count = 0) {
@@ -5815,13 +8867,13 @@ module.exports = (_ => {
 				string = string.replace(quotedRegex, fullMatch => {
 					if (!fullMatch || !fullMatch.slice(1, -1).trim()) return fullMatch;
 					excepts[count] = fullMatch;
-					return `{{${count++}}}`;
+					return this.createProtectionPlaceholder(count++);
 				});
 				return {string, excepts, count};
 			}
 
-			protectWrappedTextSegments (string, excepts = {}, count = 0) {
-				if (!this.settings.general.protectQuotedText || !string) return {string, excepts, count};
+			protectWrappedTextSegments (string, excepts = {}, count = 0, place = null) {
+				if (!this.shouldProtectWrappedTextForPlace(place) || !string) return {string, excepts, count};
 				for (let rule of this.getProtectedWrapperRules()) {
 					let cursor = 0;
 					let nextString = "";
@@ -5842,7 +8894,7 @@ module.exports = (_ => {
 						nextString += string.slice(cursor, startIndex);
 						if (innerText.trim() && !/[\r\n]/.test(fullText)) {
 							excepts[count] = fullText;
-							nextString += `{{${count++}}}`;
+							nextString += this.createProtectionPlaceholder(count++);
 						}
 						else nextString += fullText;
 						cursor = endIndex + rule.right.length;
@@ -5862,31 +8914,130 @@ module.exports = (_ => {
 					string = string.replace(regex, (match, leading, protectedTerm) => {
 						if (!protectedTerm) return match;
 						excepts[count] = protectedTerm;
-						return `${leading || ""}{{${count++}}}`;
+						return `${leading || ""}${this.createProtectionPlaceholder(count++)}`;
 					});
 				}
 				return {string, excepts, count};
 			}
 
+			protectAutoTechnicalTerms (string, excepts = {}, count = 0) {
+				if (!string) return {string, excepts, count};
+				const protectToken = (fullMatch, offset, fullString) => {
+					if (!fullMatch || fullMatch.length < 2) return fullMatch;
+					const left = fullString[offset - 1] || "";
+					const right = fullString[offset + fullMatch.length] || "";
+					if (/[A-Za-z0-9_]/.test(left) || /[A-Za-z0-9_]/.test(right)) return fullMatch;
+					excepts[count] = fullMatch;
+					return this.createProtectionPlaceholder(count++);
+				};
+
+				// Structural protection only. Do not protect a hidden built-in word list here.
+				// These patterns are code/file/repo/version/identifier-shaped content, not normal words.
+				string = string.replace(/\b[A-Za-z0-9_.-]{2,}\/[A-Za-z0-9_.-]{2,}(?:\/[A-Za-z0-9_.-]+)*\b/g, protectToken);
+				string = string.replace(/\b[A-Za-z0-9_.-]+\.(?:js|jsx|ts|tsx|json|yml|yaml|toml|env|py|java|go|rs|cpp|c|h|css|html|md|txt|zip|rar|7z|exe|dll|png|jpg|jpeg|webp|gif|mp4|mov|psd|fig)\b/gi, protectToken);
+				string = string.replace(/\bv?\d+(?:\.\d+){1,4}(?:[-+][A-Za-z0-9.-]+)?\b/gi, protectToken);
+				string = string.replace(/\b[A-Z][A-Z0-9]{1,}(?:[-_/+.][A-Z0-9]+)*\b/g, protectToken);
+				string = string.replace(/\b[A-Za-z]+(?:[A-Z][a-z0-9]+){1,}[A-Za-z0-9]*\b/g, protectToken);
+				string = string.replace(/\b[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+){1,}\b/g, protectToken);
+				return {string, excepts, count};
+			}
+
+
+			protectMixedLanguageLatinTokens (string, excepts = {}, count = 0) {
+				// Disabled by design: do not auto-protect ordinary Latin words in mixed-language chat.
+				// Users can add exact terms to “Protected Terms / Phrases”; structural tokens are handled separately.
+				return {string, excepts, count};
+			}
+
+
+			getUnicodeEmojiDetector () {
+				try {return new RegExp("[\\u200D\\uFE0E\\uFE0F\\u20E3]|\\p{Extended_Pictographic}|\\p{Regional_Indicator}", "u");}
+				catch (err) {return /[\u200D\uFE0E\uFE0F\u20E3\u2600-\u27BF]|[\uD83C-\uDBFF][\uDC00-\uDFFF]/;}
+			}
+
+			isUnicodeEmojiGrapheme (segment) {
+				if (!segment || typeof segment != "string") return false;
+				if (/^(?:\d|#|\*)$/.test(segment)) return false;
+				const detector = this.getUnicodeEmojiDetector();
+				return !!(detector && detector.test(segment));
+			}
+
+			getUnicodeEmojiRegex () {
+				try {
+					return new RegExp("(?:\\p{Regional_Indicator}{2}|[0-9#*]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\uFE0E)?(?:\\p{Emoji_Modifier})?(?:\\u200D\\p{Extended_Pictographic}(?:\\uFE0F|\\uFE0E)?(?:\\p{Emoji_Modifier})?)*)", "gu");
+				}
+				catch (err) {
+					return /(?:[\u2600-\u27BF]\uFE0F?|[\uD83C-\uDBFF][\uDC00-\uDFFF](?:\uFE0F|\uFE0E)?(?:\u200D[\uD83C-\uDBFF][\uDC00-\uDFFF](?:\uFE0F|\uFE0E)?)*)/g;
+				}
+			}
+
+			protectUnicodeEmojiSegments (string, excepts = {}, count = 0) {
+				if (!string) return {string, excepts, count};
+				// Hard rule: protect full emoji grapheme clusters before any translator sees them.
+				// This keeps ❤️, 👍🏽, 🇺🇸, 👨‍💻, etc. from being normalized or partially rewritten.
+				if (typeof Intl != "undefined" && Intl.Segmenter) {
+					const detector = this.getUnicodeEmojiDetector();
+					const segmenter = new Intl.Segmenter(undefined, {granularity: "grapheme"});
+					let nextString = "";
+					for (const part of segmenter.segment(string)) {
+						const segment = part && part.segment || "";
+						if (segment && detector && this.isUnicodeEmojiGrapheme(segment)) {
+							excepts[count] = segment;
+							nextString += this.createProtectionPlaceholder(count++);
+						}
+						else nextString += segment;
+					}
+					return {string: nextString, excepts, count};
+				}
+				return this.protectRegexMatches(string, this.getUnicodeEmojiRegex(), excepts, count);
+			}
+
+
+			createProtectionPlaceholder (count) {
+				// Per-request local placeholder. Shorter and safer for both AI and traditional translators.
+				return `⟦${count}⟧`;
+			}
+
+			getProtectionPlaceholderRegex (count) {
+				// Be tolerant: some engines add spaces or normalize brackets. Keep backward compatibility with older {{0}} / ⟦DTA0⟧ placeholders.
+				return new RegExp(`(?:⟦\\s*(?:DTA\\s*)?${count}\\s*⟧|【\\s*${count}\\s*】|\\[\\s*${count}\\s*\\]|<\\s*<\\s*<\\s*${count}\\s*>\\s*>\\s*>|[｛\\{]\\s*[｛\\{]\\s*${count}\\s*[｝\\}]\\s*[｝\\}])`, "g");
+			}
+
+			formatProtectedExceptionForDisplay (exception) {
+				if (exception == null) return "";
+				exception = String(exception);
+				// Hard rule: after translation, restore Discord markup itself for mentions/channels/roles/custom emoji.
+				// Discord's message renderer can then keep the original mention pill, bold color, and emoji rendering.
+				if (/^<a?:[A-Za-z0-9_~]+:\d+>$/.test(exception)) return exception;
+				if (/^<@!?\d+>$/.test(exception)) return exception;
+				if (/^<@&\d+>$/.test(exception)) return exception;
+				if (/^<#\d+>$/.test(exception)) return exception;
+				return exception;
+			}
+
 			addExceptions (string, excepts) {
 				for (let count in excepts) {
-					let exception = BDFDB.ArrayUtils.is(this.settings.exceptions.wordStart) && this.settings.exceptions.wordStart.some(n => excepts[count].indexOf(n) == 0) ? excepts[count].slice(1) : excepts[count];
-					let newString = string.replace(new RegExp(`[｛\{]\\s*[｛\{]\\s*${count}\\s*[｝\}]\\s*[｝\}]`), exception);
-					if (newString == string) string = newString + " " + exception;
-					else string = newString;
+					let exception = BDFDB.ArrayUtils.is(this.settings.exceptions.wordStart) && this.settings.exceptions.wordStart.some(n => String(excepts[count]).indexOf(n) == 0) ? String(excepts[count]).slice(1) : String(excepts[count]);
+					let replacement = this.formatProtectedExceptionForDisplay(exception);
+					let newString = string.replace(this.getProtectionPlaceholderRegex(count), replacement);
+					// If the translator drops a protected placeholder, do not append raw Discord markup at the end.
+					// Appending raw custom emoji/mentions caused visible <:emoji:id> and <@id> artifacts.
+					string = newString;
 				}
 				return string;
 			}
 
 			removeExceptions (string, place) {
-				let emojiRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]+/;
-				let emojiSegmentRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
 				let excepts = {}, newString = [], count = 0;
+				let discordMarkupResult = this.protectDiscordMarkupSegments(string, excepts, count);
+				string = discordMarkupResult.string;
+				excepts = discordMarkupResult.excepts;
+				count = discordMarkupResult.count;
 				let codeBlockResult = this.protectCodeBlockSegments(string, excepts, count);
 				string = codeBlockResult.string;
 				excepts = codeBlockResult.excepts;
 				count = codeBlockResult.count;
-				let wrappedTextResult = this.protectWrappedTextSegments(string, excepts, count);
+				let wrappedTextResult = this.protectWrappedTextSegments(string, excepts, count, place);
 				string = wrappedTextResult.string;
 				excepts = wrappedTextResult.excepts;
 				count = wrappedTextResult.count;
@@ -5894,35 +9045,29 @@ module.exports = (_ => {
 				string = autoProtectedResult.string;
 				excepts = autoProtectedResult.excepts;
 				count = autoProtectedResult.count;
-				let protectedTermsResult = this.protectConfiguredTerms(string, excepts, count);
-				string = protectedTermsResult.string;
-				excepts = protectedTermsResult.excepts;
-				count = protectedTermsResult.count;
+				let autoTechnicalTermsResult = this.protectAutoTechnicalTerms(string, excepts, count);
+				string = autoTechnicalTermsResult.string;
+				excepts = autoTechnicalTermsResult.excepts;
+				count = autoTechnicalTermsResult.count;
+				if (this.shouldProtectConfiguredTermsForPlace(place)) {
+					let protectedTermsResult = this.protectConfiguredTerms(string, excepts, count);
+					string = protectedTermsResult.string;
+					excepts = protectedTermsResult.excepts;
+					count = protectedTermsResult.count;
+				}
+				let emojiProtectedResult = this.protectUnicodeEmojiSegments(string, excepts, count);
+				string = emojiProtectedResult.string;
+				excepts = emojiProtectedResult.excepts;
+				count = emojiProtectedResult.count;
+
 				if (place == messageTypes.RECEIVED) {
-					let text = [], i = 0;
-					string.split("").forEach((chara, index, array) => { 
-						if (chara == "<" && text[i] || emojiRegex.test(chara) && emojiRegex.test(array[index+1])) i++;
-						text[i] = text[i] ? text[i] + chara : chara;
-						if (chara == ">" || emojiRegex.test(chara) && emojiRegex.test(array[index-1])) i++;
-					});
-					for (let j in text) {
-						if (text[j].indexOf("<") == 0 || emojiRegex.test(text[j])) {
-							newString.push(`{{${count}}}`);
-							excepts[count] = text[j];
-							count++;
-						}
-						else newString.push(text[j]);
-					}
+					newString.push(string);
 				}
 				else {
-					string = string.replace(emojiSegmentRegex, emojiSegment => {
-						excepts[count] = emojiSegment;
-						return `{{${count++}}}`;
-					});
 					let usedExceptions = BDFDB.ArrayUtils.is(this.settings.exceptions.wordStart) ? this.settings.exceptions.wordStart : [];
 					string.split(" ").forEach(word => {
 						if (word.indexOf("<@!") == 0 || word.indexOf("<#") == 0 || word.indexOf(":") == 0 || word.indexOf("<:") == 0 || word.indexOf("<a:") == 0 || word.indexOf("@") == 0 || word.indexOf("#") == 0 || usedExceptions.some(n => word.indexOf(n) == 0 && word.length > 1)) {
-							newString.push(`{{${count}}}`);
+							newString.push(this.createProtectionPlaceholder(count));
 							excepts[count] = word;
 							count++;
 						}
@@ -5930,7 +9075,7 @@ module.exports = (_ => {
 					});
 				}
 				const maskedString = newString.join(place == messageTypes.RECEIVED ? "" : " ");
-				const hasTranslatableContent = maskedString.replace(/\{\{\d+\}\}/g, "").trim().length > 0;
+				const hasTranslatableContent = maskedString.replace(/(?:⟦\s*(?:DTA\s*)?\d+\s*⟧|【\s*\d+\s*】|\[\s*\d+\s*\]|<<<\s*\d+\s*>>>|\{\{\d+\}\})/g, "").trim().length > 0;
 				return [maskedString, excepts, hasTranslatableContent];
 			}
 

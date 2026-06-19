@@ -58,7 +58,7 @@ function runProtection(text, place = "sent") {
 	};
 }
 
-test("纯三反引号代码块会整体保护并跳过翻译", () => {
+test("triple backtick code blocks are fully protected", () => {
 	const source = "```js\nconst model = \"deepseek-v3\";\n```";
 	const result = runProtection(source, "sent");
 
@@ -67,7 +67,7 @@ test("纯三反引号代码块会整体保护并跳过翻译", () => {
 	assert.equal(result.restoredText, source);
 });
 
-test("行内反引号和手动保护词会一起保留", () => {
+test("inline code and configured protected terms are both preserved", () => {
 	const source = "Use `default` for BUG team and ChatGPT Plus only";
 	const result = runProtection(source, "sent");
 
@@ -80,7 +80,7 @@ test("行内反引号和手动保护词会一起保留", () => {
 	assert.equal(result.restoredText, source);
 });
 
-test("URL 域名 邮箱 模型名会自动保护", () => {
+test("urls domains emails and model names are auto-protected", () => {
 	const source = "Docs https://api.deepseek.com/chat/completions via platform.openai.com contact name@example.com and Claude 3.7 Sonnet";
 	const result = runProtection(source, "sent");
 
@@ -91,7 +91,7 @@ test("URL 域名 邮箱 模型名会自动保护", () => {
 	assert.equal(result.restoredText, source);
 });
 
-test("接收消息里的 Discord 特殊对象仍会被保护", () => {
+test("discord special objects stay protected in received messages", () => {
 	const source = "hello <@!123456789> <:wave:456789> world";
 	const result = runProtection(source, "received");
 
@@ -100,11 +100,27 @@ test("接收消息里的 Discord 特殊对象仍会被保护", () => {
 	assert.equal(result.restoredText, source);
 });
 
-test("普通版本号不会被误判成域名或模型名", () => {
+test("plain version numbers are not misdetected as domains or model names", () => {
 	const source = "版本 3.1 不应该被自动保护";
 	const result = runProtection(source, "sent");
 
 	assert.deepEqual(result.protectedValues, []);
 	assert.equal(result.shouldTranslate, true);
+	assert.equal(result.restoredText, source);
+});
+
+test("mixed CJK text protects nearby latin product tokens", () => {
+	const source = "这个用 bybit 弄完，再冻结 bybit 吧";
+	const result = runProtection(source, "sent");
+
+	assert.ok(result.protectedValues.includes("bybit"));
+	assert.equal(result.restoredText, source);
+});
+
+test("common lowercase English stopwords in mixed text are not auto-protected", () => {
+	const source = "这个 need 处理";
+	const result = runProtection(source, "sent");
+
+	assert.deepEqual(result.protectedValues, []);
 	assert.equal(result.restoredText, source);
 });

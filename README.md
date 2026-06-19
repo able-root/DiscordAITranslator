@@ -1,119 +1,112 @@
 # DiscordAITranslator
 
-基于 BetterDiscord 原版 `Translator` 插件二次开发的 Discord AI 翻译插件，面向多服务商接入、频道级翻译规则和更适合日常使用的设置界面。
+基于 BetterDiscord 原版 `Translator` 二次开发的 Discord AI 翻译插件，面向发送前翻译、收到消息自动翻译、历史消息补翻、保护规则和滚动稳定性。
 
 ## 当前版本
 
 - 作者：`ROOT94`
-- 版本：`v0.0.2`
+- 版本：`0.3.26`
 - 基础来源：[mwittrien / BetterDiscordAddons / Translator](https://github.com/mwittrien/BetterDiscordAddons/tree/master/Plugins/Translator/)
 - 当前仓库：[able-root/DiscordAITranslator](https://github.com/able-root/DiscordAITranslator)
 
+## 0.3.24 - 0.3.26 主要变化
+
+### 0.3.24
+
+- 修复设置页 `Select` / 输入框点击后面板跳动、滚动跳顶问题
+- 扩大设置面板滚动容器识别范围
+- 点击 `Select` 时临时拦截 `scrollIntoView`
+- 下拉框关闭后恢复原行为
+
+### 0.3.25
+
+- 发送消息前增加“同语言跳过”
+- 当发送源语言和发送目标语言相同，直接发送原文
+- 如果发送源语言是“检测语言”，先本地检测，再决定是否跳过
+- 增加发送结果兜底，避免 AI 把中文改写成另一句中文再发出去
+
+### 0.3.26
+
+- 移除短文本最小长度跳过，`嘻嘻 / 哈哈 / 嗯嗯` 这类短句也可翻译
+- 加强 AI 提示词，要求不要省略语气词、短句、重复词和独立短行
+- 手动翻译时强化目标语言约束，避免返回错误语言
+- 从自动保护包裹符规则中移除 `||`，不再把剧透内容直接挡掉
+- 收到消息自动翻译前增加“同目标语言跳过”
+- 手动翻译时尽量排除引用预览内容，只翻当前消息正文
+- 手动翻译增加短时间滚动锁，避免翻完后被新消息拉走
+- 自动翻译刷新改为“消息锚点恢复”，减少跳到中间或误拉到底部
+- 单条消息“翻译消息”按钮独立于输入框总翻译开关
+
+## 当前工作区额外补丁
+
+当前工作区在 `0.3.26.scroll-anchor-manual-button-fix` 基础上补了一层缓存防回归：
+
+- 旧版本已经缓存的“同语言改写译文”不会再被继续复用
+- 收到消息如果当前规则判断应跳过翻译，会同时清理不该继续展示的旧缓存结果
+- 缓存签名已提升，避免旧缓存直接沿用到这次基线
+
 ## 主要功能
 
-- 发送消息前翻译
-- 接收消息自动翻译
-- 每个频道单独记录翻译开关
+- 发送前翻译与收到消息自动翻译
+- 历史消息批量翻译与缓存复用
 - 多服务商支持：DeepSeek、Azure Translator、Google Cloud Translation、DeepL、OpenAI Compatible 等
 - API Key / Endpoint / Model 可视化配置
-- 设置面板内置模型检测、模型列表拉取
-- 译文高亮、左侧色条、原文同时显示、剧透显示
-- 保护词、保护短语、包裹符规则、跳过翻译前缀
-- 语言识别助手
+- 原文 / 译文显示控制、高亮与状态提示
+- 自定义保护词、自动保护包裹符、跳过前缀
+- 回复预览、手动翻译、滚动锁与滚动锚点恢复
+
+## 当前重点测试点
+
+1. 输入框总翻译开关关闭后，单条消息翻译按钮是否仍可用
+2. 自动翻译开启后，新消息进入时页面是否还会跳到中间
+3. 收到中文消息且目标语言也是中文时，是否不再生成中文改写
+4. 手动翻译外语消息时，是否稳定输出设定的目标语言
+5. `嘻嘻 / 哈哈 / 嗯嗯` 这类短句是否不再被漏掉
+6. `||剧透内容||` 是否不再被旧包裹符规则拦住
 
 ## 推荐安装方式
 
-推荐按下面方式安装，最省事：
-
 1. 安装 `DiscordAITranslator.plugin.js`
 2. 安装 `BDFDB Library`
-3. 主题部分推荐使用 `system24` 的直链导入方式
+3. 如需搭配主题，推荐使用 `system24` 直链导入方式
 
 推荐链接：
 
-- BDFDB Library：
+- BDFDB Library:
   [https://mwittrien.github.io/downloader/?library](https://mwittrien.github.io/downloader/?library)
-- system24 主题说明页：
+- system24 说明页：
   [https://refact0r.github.io/system24/](https://refact0r.github.io/system24/)
-- system24 主题文件页：
+- system24 主题文件：
   [https://github.com/refact0r/system24/blob/main/theme/system24.theme.css](https://github.com/refact0r/system24/blob/main/theme/system24.theme.css)
 - system24 直链导入地址：
   [https://refact0r.github.io/system24/build/system24.css](https://refact0r.github.io/system24/build/system24.css)
 
-## 快速安装
+## 快速开始
 
-### 1. 安装插件
-
-把仓库里的 `DiscordAITranslator.plugin.js` 放到：
+1. 把 `DiscordAITranslator.plugin.js` 放到：
 
 ```text
 %AppData%\BetterDiscord\plugins
 ```
 
-然后在 BetterDiscord 插件页启用 `DiscordAITranslator`。
-
-### 2. 安装 BDFDB Library
-
-如果 Discord 提示缺少依赖，直接下载安装：
-
-[BDFDB Library 下载页](https://mwittrien.github.io/downloader/?library)
-
-### 3. 安装 system24 主题
-
-你有两种方式：
-
-- 方式 A：下载 `system24.theme.css` 后放进 `%AppData%\BetterDiscord\themes`
-- 方式 B：在 BetterDiscord 主题导入里直接添加：
-
-```text
-https://refact0r.github.io/system24/build/system24.css
-```
-
-如果你想少折腾，推荐方式 B。
-
-## 使用教程
-
-### 基础使用
-
-1. 打开插件设置
-2. 在“翻译服务”里选择主服务商
-3. 填入 API Key、Endpoint、Model
-4. 点击“检测模型”或“获取模型列表”确认配置可用
-5. 在“语言设置”里配置发送语言、接收语言、目标语言
-6. 按需开启接收消息自动翻译
-
-### 推荐配置
-
-- 主服务商优先：`DeepSeek`、`Azure Translator`、`Google Cloud Translation`
-- 如果你主要看外语频道，建议开启接收消息自动翻译
-- 如果频道里专有名词很多，建议优先配置“保护规则”
-- 如果你不想翻错链接、模型名、命令参数，建议保留自动保护规则
-
-### 常用保护方式
-
-- 用反引号包裹专有名词：`deepseek-chat`
-- 用包裹符保护整段内容
-- 用跳过前缀让整句不翻译，例如：`!`
+2. 安装 `BDFDB Library`
+3. 在 BetterDiscord 插件页启用 `DiscordAITranslator`
+4. 进入插件设置，配置翻译服务商、API Key、语言设置
+5. 需要自动翻译收到消息时，再按需开启相关规则和过滤项
 
 ## 仓库文件说明
 
-- `DiscordAITranslator.plugin.js`：主插件
-- `system24.theme.css`：本地打包的 system24 BetterDiscord 主题加载文件
+- `DiscordAITranslator.plugin.js`：主插件文件
+- `CHANGELOG.md`：版本变更记录
+- `发布说明.md`：GitHub Release / 对外发布说明
 - `安装教程.md`：安装步骤
-- `使用说明.md`：详细使用说明
-- `发布说明.md`：发布包与分发说明
+- `使用说明.md`：详细使用与配置说明
+- `system24.theme.css`：本地附带的 BetterDiscord 主题文件
 
-## 开发与验证
-
-已在本地使用下面命令做基础检查：
+## 验证命令
 
 ```powershell
 node --check .\DiscordAITranslator.plugin.js
-node --test .\tests\translation-regression.test.js
-node --test .\tests\protection-regression.test.js
 ```
 
-## 鸣谢
-
-- 原版 Translator 插件作者：[mwittrien](https://github.com/mwittrien)
-- system24 主题作者：[refact0r](https://github.com/refact0r)
+当前 `tests\*.test.js` 基线仍是旧版断言，和这份 `0.3.26` 代码存在多处不一致；如果要把自动化回归也追到当前版本，需要先同步测试预期。

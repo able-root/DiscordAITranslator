@@ -8,6 +8,10 @@ function createPluginInstance() {
 		ArrayUtils: {
 			is: Array.isArray
 		},
+		DataUtils: {
+			load: () => ({}),
+			save: () => {}
+		},
 		DiscordObjects: {
 			Message: class Message {
 				constructor(data) {
@@ -122,6 +126,30 @@ test("short CJK terms can still pass the auto-translate length gate", () => {
 	assert.equal(plugin.getAutoTranslateMinimumLengthForAnalysis({dominantFamily: "han", totalLetters: 2}), 2);
 });
 
+test("legacy received preset no longer overrides manual received auto-translate switches", () => {
+	const plugin = createPluginInstance();
+	plugin.settings.filters.receivedAutoTranslatePreset = "loose";
+	plugin.settings.filters.skipMixedReceivedMessages = true;
+	plugin.settings.filters.skipSameLanguageReceivedMessages = true;
+	plugin.settings.filters.dropSimilarTranslations = true;
+
+	assert.equal(plugin.shouldSkipMixedReceivedMessages(), true);
+	assert.equal(plugin.shouldSkipSameLanguageReceivedMessages(), true);
+	assert.equal(plugin.shouldDropSimilarTranslations(), true);
+});
+
+test("received auto-translate switches can stay off even if a stricter legacy preset is still stored", () => {
+	const plugin = createPluginInstance();
+	plugin.settings.filters.receivedAutoTranslatePreset = "strict";
+	plugin.settings.filters.skipMixedReceivedMessages = false;
+	plugin.settings.filters.skipSameLanguageReceivedMessages = false;
+	plugin.settings.filters.dropSimilarTranslations = false;
+
+	assert.equal(plugin.shouldSkipMixedReceivedMessages(), false);
+	assert.equal(plugin.shouldSkipSameLanguageReceivedMessages(), false);
+	assert.equal(plugin.shouldDropSimilarTranslations(), false);
+});
+
 test("new-only scope skips the messages that are already loaded when a channel session starts", () => {
 	const plugin = createPluginInstance();
 	const recordedOptions = [];
@@ -234,6 +262,40 @@ test("loaded-messages scope can still queue visible reply preview translations i
 	assert.equal(queuedCount, 1);
 });
 
+test("same-language received auto-translation caches are dropped instead of being reused", () => {
+	const plugin = createPluginInstance();
+	const channel = {id: "channel-zh"};
+	const message = {
+		id: "message-zh-cache",
+		content: "估计是阿三修出bug了",
+		embeds: [],
+		author: {id: "other-user"}
+	};
+
+	plugin.settings.choices.received.output = "zh-CN";
+	plugin.getLanguageChoice = (direction, place) => {
+		if (place == "received" && direction == "output") return "zh-CN";
+		if (place == "received" && direction == "input") return "auto";
+		return "en";
+	};
+
+	const originalContentData = plugin.extractOriginalContentData(message);
+	const signature = plugin.createReceivedTranslationSignature(message, channel.id, originalContentData);
+	plugin.persistTranslationCacheEntry(message.id, signature, {
+		signature,
+		channelId: channel.id,
+		auto: true,
+		content: "估计是阿三修bug了",
+		translatedContent: "估计是阿三修bug了",
+		originalContent: originalContentData.content,
+		input: {id: "zh-CN"},
+		output: {id: "zh-CN"}
+	});
+
+	assert.equal(plugin.shouldSkipReceivedTranslationBeforeRequest(originalContentData, channel.id), true);
+	assert.equal(plugin.getCachedReceivedTranslation(message, channel.id, originalContentData), null);
+});
+
 test("disabled channel auto-translation leaves reply previews untouched", () => {
 	const plugin = createPluginInstance();
 	const originalContent = "Hola amigo\n> hello friend";
@@ -277,7 +339,7 @@ test("disabled channel auto-translation hides stored reply preview translations"
 	};
 	plugin.applyStoredTranslationToMessage(referencedMessage, {
 		channelId: "channel-disabled",
-		auto: false,
+		auto: true,
 		content: "半价充值",
 		translatedContent: "半价充值",
 		originalContent,
@@ -433,4 +495,143 @@ test("late auto-translation results are ignored after the channel toggle is disa
 
 	assert.equal(result, false);
 	assert.equal(applyCount, 0);
+});
+
+test("manual untranslate suppresses cached auto translations during message refresh", async () => {
+	const plugin = createPluginInstance();
+	const message = {
+		id: "suppressed-cache-1",
+		channel_id: "channel-suppressed",
+		content: "hello world",
+		embeds: [],
+		attachments: [],
+		author: {id: "other-user"}
+	};
+	plugin.scheduleTranslationRerender = () => {};
+	plugin.applyStoredTranslationToMessage(message, {
+		channelId: "channel-suppressed",
+		auto: true,
+		content: "你好，世界",
+		translatedContent: "你好，世界",
+		originalContent: "hello world",
+		embeds: {}
+	});
+
+	await plugin.translateMessage(message, {id: "channel-suppressed"});
+
+	let cacheReadCount = 0;
+	let queuedCount = 0;
+	plugin.getCachedReceivedTranslation = () => {
+		cacheReadCount++;
+		return {
+			signature: "cached-signature",
+			channelId: "channel-suppressed",
+			auto: true,
+			content: "你好，世界",
+			translatedContent: "你好，世界",
+			originalContent: "hello world",
+			embeds: {}
+		};
+	};
+	plugin.queueAutoTranslateMessage = () => {
+		queuedCount++;
+	};
+
+	const stream = {
+		content: {
+			id: "suppressed-cache-1",
+			attachments: [],
+			content: "hello world"
+		}
+	};
+
+	plugin.checkMessage(stream, message, {id: "channel-suppressed"}, {
+		skipAutoQueue: false,
+		historicalLoad: false
+	});
+
+	assert.equal(cacheReadCount, 0);
+	assert.equal(queuedCount, 0);
+	assert.equal(stream.content.content, "hello world");
+});
+
+test("manual untranslate suppresses cached reply preview translations", async () => {
+	const plugin = createPluginInstance();
+	const referencedMessage = {
+		id: "reply-suppressed-1",
+		channel_id: "channel-reply-suppressed",
+		content: "hello world",
+		embeds: [],
+		attachments: [],
+		author: {id: "other-user"}
+	};
+	plugin.scheduleTranslationRerender = () => {};
+	plugin.applyStoredTranslationToMessage(referencedMessage, {
+		channelId: "channel-reply-suppressed",
+		auto: true,
+		content: "你好，世界",
+		translatedContent: "你好，世界",
+		originalContent: "hello world",
+		embeds: {}
+	});
+
+	await plugin.translateMessage(referencedMessage, {id: "channel-reply-suppressed"});
+
+	plugin.getCachedReceivedTranslation = () => {
+		throw new Error("suppressed reply preview should not read cached translations");
+	};
+	plugin.queueReplyPreviewTranslation = () => {
+		throw new Error("suppressed reply preview should not queue a new translation");
+	};
+
+	const event = {
+		instance: {
+			props: {
+				baseMessage: {channel_id: "channel-reply-suppressed"},
+				referencedMessage: {
+					message: referencedMessage
+				}
+			}
+		}
+	};
+
+	plugin.processMessageReply(event);
+
+	assert.equal(event.instance.props.referencedMessage.message.content, "hello world");
+});
+
+test("manual message translations stay visible in reply previews even when incoming auto-translate is off", () => {
+	const plugin = createPluginInstance();
+	const referencedMessage = {
+		id: "reply-manual-1",
+		channel_id: "channel-reply-manual",
+		content: "hello world",
+		embeds: [],
+		attachments: [],
+		author: {id: "other-user"}
+	};
+	plugin.applyStoredTranslationToMessage(referencedMessage, {
+		channelId: "channel-reply-manual",
+		auto: false,
+		content: "你好，世界",
+		translatedContent: "你好，世界",
+		originalContent: "hello world",
+		embeds: {}
+	});
+	plugin.isTranslationEnabled = () => false;
+
+	const event = {
+		instance: {
+			props: {
+				baseMessage: {channel_id: "channel-reply-manual"},
+				referencedMessage: {
+					message: referencedMessage
+				}
+			}
+		}
+	};
+
+	plugin.processMessageReply(event);
+
+	assert.equal(event.instance.props.referencedMessage.message.content, "你好，世界");
 });
