@@ -2,7 +2,7 @@
  * @name DiscordAITranslator
  * @author ROOT94
  * @version 0.3.32
- * @description 基于 BetterDiscord Translator 二次开发的 Discord AI 翻译插件
+ * @description Discord客户端的AI翻译插件
  * @source https://github.com/able-root/DiscordAITranslator
  */
 
