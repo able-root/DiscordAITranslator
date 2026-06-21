@@ -3,7 +3,8 @@
  * @author ROOT94
  * @version 0.3.32
  * @description Discord客户端的AI翻译插件
- * @source https://github.com/able-root/DiscordAITranslator
+ * @source https://github.com/ROOT94-MAX/DiscordAITranslator
+ * @license GPL-2.0
  */
 
 module.exports = (_ => {

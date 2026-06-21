@@ -6,7 +6,7 @@
 [![Loader](https://img.shields.io/badge/Loader-BetterDiscord-4E5D94?style=flat-square)](https://betterdiscord.app)
 [![Version](https://img.shields.io/badge/Version-0.3.32-success?style=flat-square)](https://github.com/ROOT94-MAX/DiscordAITranslator/releases)
 [![Downloads](https://img.shields.io/github/downloads/ROOT94-MAX/DiscordAITranslator/total?style=flat-square&color=yellow)](https://github.com/ROOT94-MAX/DiscordAITranslator/releases)
-[![License](https://img.shields.io/badge/License-MIT-orange?style=flat-square)](./LICENSE)
+[![License](https://img.shields.io/badge/License-GPL%20v2-blue?style=flat-square)](./LICENSE)
 
 一款专为 Discord 打造的智能翻译插件：发送前双语预审、接收消息自动翻译、历史消息智能补翻，内置文本保护规则与滚动稳定性保障。
 
@@ -225,4 +225,6 @@ node tests\ai-decision-allcaps-regression.test.js
 
 ## 开源协议
 
-本项目基于 [MIT License](./LICENSE) 开源。你可以自由使用、修改和分发，但请保留原作者与上游协议声明。
+本项目基于 [GNU General Public License v2.0](./LICENSE) 开源。你可以自由使用、修改和分发，但再分发或衍生作品必须同样采用 GPL v2.0 协议发布。
+
+本项目基于 mwittrien/BetterDiscordAddons 的 Translator 插件二次开发，上游同样采用 GPL v2.0 协议。
