@@ -34,11 +34,9 @@
 
 收到消息自动翻译，译文以高亮形式附在原文下方，并标注翻译来源：
 
-![翻译效果](images/translation-effect.png)
-
-适用多语言服务器场景，原消息与译文同屏可见：
-
-![多语言聊天场景](images/chat-overview.png)
+| 原文 | 译文 |
+|------|------|
+| ![原文截图](images/chat-overview.png) | ![译文截图](images/translation-effect.png) |
 
 ---
 
